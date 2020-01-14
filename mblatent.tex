@@ -1,0 +1,16 @@
+\begin{algorithm}[t!]
+\caption{Model-based Reinforcement Learning with Latent States}
+\begin{algorithmic}[1]
+\label{alg:mblatent}
+\REQUIRE Some base policy for data collection $\pi_0$, hyperparameter $N$
+\STATE Run base policy $\pi(a_t|s_t)$ (e.g. random policy) to collect $\mathcal{D} = \{(s,a,s')_i\}$
+\FOR{every $N$ steps}
+\WHILE{True}
+\STATE Learn dynamics model $p_\phi(s_{t+1}|s_t,a_t),p_\phi(r_t|s_t),p(o_t|s_t),g_\psi(o_t)$
+\STATE Plan through $f(s,a)$ to choose actions
+\STATE Execute the first planned action, observe resulting state $o'$ (MPC)
+\STATE Append $(o,a,o')$ to dataset $\mathcal{D}$
+\ENDWHILE
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}

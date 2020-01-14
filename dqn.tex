@@ -1,0 +1,13 @@
+\begin{algorithm}[t!]
+\caption{Classic Deep Q-Learning Algorithm (DQN)}
+\begin{algorithmic}[1]
+\label{alg:dqn}
+\WHILE{true}
+    \STATE Take some action $a_i$ and observe $(s_i,a_i,s'_i,r_i)$ and add it to $\mathcal{B}$
+    \STATE Sample mini-batch $\{s_j,a_j,s'_j,r_j\}$
+    \STATE Compute $y_j = r_j + \gamma \max_{a'_j}Q_{\phi'}(s'_j,a'_j)$ using target network $Q_{\phi'}$
+    \STATE $\phi \leftarrow \phi-\alpha\Sigma_j\frac{dQ_\phi}{d\phi}(s_j,a_j)(Q_\phi(s_j,a_j) - y_J)$
+    \STATE update $\phi'$: copy $\phi$ every $N$ steps.
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

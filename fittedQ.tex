@@ -1,0 +1,14 @@
+\begin{algorithm}[t!]
+\caption{Fitted Q-Iteration Algorithm}
+\begin{algorithmic}[1]
+\label{alg:fittedQ}
+\REQUIRE Some base policy for data collection; hyperparameter $K$
+\WHILE{true}
+    \STATE Collect dataset $\{(s_i,a_i,s'_i,r_i)\}$ using some policy
+    \FOR{$K$ times}
+        \STATE Set $y_i\leftarrow r(s_i,a_i) + \gamma \max_{a'_i}Q_\phi(s'_i,a'_i)$
+        \STATE Set $\phi \leftarrow \argminA_\phi \frac{1}{2}\Sigma_i\lvert|Q_\phi(s_i,a_i) - y_i|\rvert^2$
+    \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

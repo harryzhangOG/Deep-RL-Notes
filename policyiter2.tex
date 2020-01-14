@@ -1,0 +1,10 @@
+\begin{algorithm}[t!]
+\caption{Value Iteration via DP}
+\begin{algorithmic}[1]
+\label{alg:policyiter2}
+\WHILE{true}
+    \STATE Set $Q(s,a)\leftarrow r(s,a) + \gamma\mathbb{E}\left[V(s')\right]$
+    \STATE Set $V(s) \leftarrow \max_{a}Q(s,a)$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

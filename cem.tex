@@ -1,0 +1,13 @@
+\begin{algorithm}[t!]
+\caption{Cross Entropy Method with Continuous-valued Input}
+\begin{algorithmic}[1]
+\label{alg:cem}
+\REQUIRE Some base distribution for action sequence $p(A)$ 
+\WHILE{true}
+    \STATE Sample $A_1,...,A_N$ from $p(A)$
+    \STATE Evaluate $J(A_1),...,J(A_N)$
+    \STATE Pick elites $A_{i_1},...,A_{i_M}$ with the highest value, where $M<N$
+    \STATE Refit $p(A)$ to elites $A_{i_1},...,A_{i_M}$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

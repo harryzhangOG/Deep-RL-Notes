@@ -1,0 +1,11 @@
+\begin{algorithm}[t!]
+\caption{Online Q-Iteration Algorithm}
+\begin{algorithmic}[1]
+\label{alg:onlineQiter}
+\WHILE{true}
+    \STATE Take some action $a_i$ and observe $(s_i,a_i,s'_i,r_i)$
+    \STATE $y_i = r(s_i,a_i) + \gamma \max_{a'}Q_\phi(s_i,a_i,s'_i,r_i)$
+    \STATE $\phi \leftarrow \phi-\alpha\frac{dQ_\phi}{d\phi}(s_i,a_i)(Q_\phi(s_i,a_i) - y_i)$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

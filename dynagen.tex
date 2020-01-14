@@ -1,0 +1,16 @@
+\begin{algorithm}[t!]
+\caption{General Dyna}
+\begin{algorithmic}[1]
+\label{alg:dynagen}
+\REQUIRE Some exploration policy for data collection $\pi_0$
+\STATE Collect some data, consisting of transitions $(s,a,s',r)$
+\STATE Learn model $\hat{p}(s'|s,a)$ (and optionally, $\hat{r}(s,a)$
+\FOR{$K$ times}
+\STATE Sample $s\sim \mathcal{B}$ from buffer
+\STATE Choose action $a$ (from $\mathcal{B}$, from $\pi$, or random)
+\STATE Simulate $s'\sim\hat{p}(s'|s,a)$ (and $r=\hat{r}(s,a)$)
+\STATE Train on $(s,a,s',r)$ with model-free RL
+\STATE (optional) take $N$ more model-based steps
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}

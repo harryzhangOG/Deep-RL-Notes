@@ -1,0 +1,13 @@
+\begin{algorithm}[t!]
+\caption{Model-based Reinforcement Learning Version 1.0}
+\begin{algorithmic}[1]
+\label{alg:mb10}
+\REQUIRE Some base policy for data collection $\pi_0$
+\STATE Run base policy $\pi(a_t|s_t)$ (e.g. random policy) to collect $\mathcal{D} = \{(s,a,s')_i\}$
+\WHILE{True}
+\STATE Learn dynamics model $f(s,a)$ to minimize $\sum_i\lvert|f(s_i,a_i)-s'_i|\rvert^2$
+\STATE Plan through $f(s,a)$ to choose actions
+\STATE Execute those actions and add the resulting data $\{(s,a,s')_j\}$ to $\mathcal{D}$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

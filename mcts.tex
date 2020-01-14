@@ -1,0 +1,13 @@
+\begin{algorithm}[t!]
+\caption{Generic Monte Carlo Tree Search (MCTS)}
+\begin{algorithmic}[1]
+\label{alg:mcts}
+\REQUIRE Some base tree policy for expanding nodes, some base default policy to simulate a trajectory from a leaf
+\WHILE{true}
+    \STATE Find a leaf $s_l$ using TreePolicy($s_1$)
+    \STATE Evaluate the leaf using DefaultPolicy($s_l$)
+    \STATE Update all values in tree between $s_1$ and $s_l$
+\ENDWHILE
+Take best action from $s_1$
+\end{algorithmic}
+\end{algorithm}

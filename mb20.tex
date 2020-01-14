@@ -1,0 +1,13 @@
+\begin{algorithm}[t!]
+\caption{Model-based Reinforcement Learning Version 1.5}
+\begin{algorithmic}[1]
+\label{alg:mb20}
+\REQUIRE Some base policy for data collection $\pi_0$
+\STATE Run base policy $\pi_0(a_t|s_t)$ (e.g. random policy) to collect $\mathcal{D} = \{(s,a,s')_i\}$
+\WHILE{True}
+\STATE Learn dynamics model $f(s,a)$ to minimize $\sum_i\lvert|f(s_i,a_i)-s'_i|\rvert^2$
+\STATE Backpropagate through $f(s,a)$ into the policy to optimize $\pi_\theta(a_t|s_t)$
+\STATE Run $\pi_\theta(a_t|s_t)$, appending the visited tuples $(s,a,s')$ to $\mathcal{D}$.
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

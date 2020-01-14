@@ -1,0 +1,14 @@
+\begin{algorithm}[t!]
+\caption{MaxEnt Inverse RL}
+\begin{algorithmic}[1]
+\label{alg:maxent}
+\REQUIRE Some random reward parameter $\psi$
+\WHILE{True}
+\STATE Given $\psi$, compute backward message $\beta(s_t,a_t)$
+\STATE Given $\psi$, compute forward message $\alpha(s_t)$
+\STATE Compute $\mu_t(s_t,a_t)\propto \beta(s_t,a_t)\alpha(s_t)$
+\STATE Evaluate $\nabla_{\psi}\mathcal{L} = \frac{1}{N}\sum_{i=1}^N\sum_{t=1}^T\nabla_\psi r_\psi(s_{i,t},a_{i,t}) -\sum_{t=1}^T\int \int \mu_t(s_t,a_t)\nabla_\psi r_\psi(\tau)ds_tda_t$
+\STATE $\psi \leftarrow \psi + \eta\nabla_\psi\mathcal{L}$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,14 @@
+\begin{algorithm}[t!]
+\caption{Iterative LQR (iLQR)}
+\begin{algorithmic}[1]
+\label{alg:ilqr}
+\WHILE{until convergence}
+    \STATE $F_t = \nabla_{x_t,u_t}f(\delta x_t, \delta u_t)$
+    \STATE $C_t = \nabla^2_{x_t,u_t}c(\delta x_t, \delta u_t)$
+    \STATE $c_t = \nabla_{x_t,u_t}c(\delta x_t, \delta u_t)$
+    \STATE Run LQR backward recursion on state $\delta x_t = x_t - \hat{x_t}$ and action $\delta u_t = u_t - \hat{u_t}$
+    \STATE Run forward pass with real nonlinear dynamics and $u_t = K_t(x_t-\hat{x_t}) + k_t + \hat{u_t}$
+    \STATE Update $\hat{x_t}$ and $\hat{u_t}$ based on states and actions in forward pass
+    \ENDWHILE
+\end{algorithmic}
+\end{algorithm}

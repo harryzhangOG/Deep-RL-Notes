@@ -1,0 +1,120 @@
+\documentclass[12pt,oneside]{book}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage[margin=1.00in]{geometry} \setlength{\parindent}{2em} \usepackage{graphicx}
+\usepackage{hyperref} 
+\usepackage{listings}
+\usepackage[T1]{fontenc}
+\usepackage{amsfonts}
+\usepackage{todonotes}
+\usepackage{algorithm}
+\usepackage[noend]{algorithmic}
+\setlength{\marginparwidth}{2cm}
+\usepackage{enumitem}
+\setlist{nosep}
+\DeclareMathOperator*{\argminA}{arg\,min}
+\DeclareMathOperator*{\argmaxA}{arg\,max}
+\usepackage{tcolorbox}
+\tcbset{colback=blue!10,colframe=blue!45
+       ,coltitle=black,fonttitle=\bfseries}
+
+\newcommand{\tab}[1][1cm]{\hspace*{#1}}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+ 
+ \lstdefinestyle{mystyle}{
+     backgroundcolor=\color{backcolour},   
+     commentstyle=\color{codegreen},
+     keywordstyle=\color{magenta},
+     numberstyle=\tiny\color{codegray},
+     stringstyle=\color{codepurple},
+     basicstyle=\footnotesize,
+     breakatwhitespace=false,         
+     breaklines=true,                 
+     captionpos=b,                    
+     keepspaces=true,                 
+     numbers=left,                    
+     numbersep=5pt,                  
+     showspaces=false,                
+     showstringspaces=false,
+     showtabs=false,                  
+     tabsize=2,
+     language=C
+     }
+\lstset{style=mystyle, escapeinside={|}{|}}
+
+
+%ensures that the "chapter 1" and the title of chapter are on same line
+%the compact parameter ensures that the vertical spacing is less
+\usepackage[compact]{titlesec}
+\titleformat{\chapter}[hang] 
+{\normalfont\Large\bfseries}{\chaptertitlename\ \thechapter:}{1em}{} 
+
+\usepackage[thmmarks,thref,hyperref,amsmath]{ntheorem}
+\theorembodyfont{\upshape\mdseries}
+\newcommand*\phantomrel[1]{\mathrel{\phantom{#1}}}
+% Use these for theorems, lemmas, proofs, etc.
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newenvironment{proof}{{\bf Proof:}}{\hfill\rule{2mm}{2mm}}
+
+%create shortcut for definition
+\def\bdef{\begin{definition}}
+\def\endef{\end{definition}}
+
+\usepackage{mdframed}
+\usepackage{color,soul}
+\usepackage{mathtools}
+\usepackage{amssymb}
+
+
+%for the indentation of the "section", "subsection" and "chapter" titles 
+\titleformat{\section}
+{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+\titleformat{\paragraph}[runin]
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titleformat{\subparagraph}[runin]
+{\normalfont\normalsize\bfseries}{\thesubparagraph}{1em}{}
+
+\def\Name{Harry Zhang}
+\title{Deep Reinforcement Learning\\
+\large CS 285, University of California, Berkeley}
+% \medium{Department of Electronic Engineering and Computer Science}
+\author{\Name}
+\date{December 2019}
+\begin{document}
+\sloppy
+\maketitle
+\pagenumbering{roman}
+\tableofcontents
+\include{preface}
+\mainmatter
+\newpage
+\pagenumbering{arabic}
+
+\include{intro}
+\include{imitation}
+\include{poligrad}
+\include{actorcritic}
+\include{value}
+\include{qfunc}
+\include{pgtheory}
+\include{modelbased}
+\include{mbpolicy}
+\include{varinfer}
+\include{ctrasinf}
+\include{inverse}
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,ref}
+\end{document}

@@ -1,0 +1,18 @@
+\begin{algorithm}[t!]
+\caption{Q-Learning with Replay Buffer and Target Network}
+\begin{algorithmic}[1]
+\label{alg:QwRB_tn}
+\REQUIRE Some base policy for data collection; hyperparameter $K$ and $N$
+\WHILE{true}
+\STATE Save target network parameters: $\phi' \leftarrow \phi$
+\FOR{$N$ times}
+    \STATE Collect dataset $\{(s_i,a_i,s'_i,r_i)\}$ using some policy, add it to replay buffer $\mathcal{B}$
+    \FOR{$K$ times}
+        \STATE Sample a batch $(s_i,a_i,s'_i,r_i)$ from $\mathcal{B}$
+        \STATE Set $y_i\leftarrow r(s_i,a_i) + \gamma \max_{a'_i}Q_{\phi'}(s'_i,a'_i)$
+        \STATE Set $\phi \leftarrow \phi-\alpha\Sigma_i\frac{dQ_\phi}{d\phi}(s_i,a_i)(Q_\phi(s_i,a_i) - y_i)$
+    \ENDFOR
+    \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

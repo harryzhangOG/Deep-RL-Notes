@@ -1,0 +1,11 @@
+\begin{algorithm}[t!]
+\caption{Guided Policy Search}
+\begin{algorithmic}[1]
+\label{alg:guided}
+\WHILE{True}
+\STATE Optimize each local policy $\pi_{LQR,i}(u_t|x_t)$ on initial state $x_{0,i}$ with respect to $\Tilde{c}_{k,i}(x_t,u_t)$
+\STATE Use samples from the previous step to train $\pi_\theta(u_t|x_t)$ to mimic each $\pi_{LQR,i}(u_t|x_t)$
+\STATE Update cost function $\Tilde{c}_{k+1,i}(x_t,u_t) = c(x_t,u_t) + \lambda_{k+1}\log \pi_\theta(u_t|x_t)$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

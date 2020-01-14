@@ -1,0 +1,146 @@
+\chapter{Inverse Reinforcement Learning}
+So far in our RL algorithms, we have been assuming that the reward function is known a priori, or it is manually designed to define a task. What if we want to learn the reward function from observing an expert, and then use reinforcement learning? This is the idea of inverse RL, where we first figure out the reward function and then apply RL. 
+
+Why should we worry about learning rewards at all? From the imitation learning perspective, the agent learns via imitation by copying the actions performed by the expert, without any reasoning about outcomes of actions. However, the natural way that human learn through imitation is that human copy the intent of the expert, and thus might take very different actions. In RL, it is often the case that the reward function is ambiguous in the environment. For example, it is hard to hand-design a reward function for autonomous driving. 
+
+The inverse RL problem definition is as follows: we try to infer the reward functions from demonstrations, and then learn to maximize the inferred reward using any RL algorithm that was covered so far. Formally, in inverse RL, we learn $r_\psi(s,a)$, and then use it to learn $\pi^*(a|s)$. However, this is an underspecified problem, because many reward function can explain the same behavior. The reward function can take many forms. One potential form is the linear reward function, which is a weighted sum of features:
+\[
+r_\psi(s,a) = \sum_i\psi_if_i(s,a) = \psi^Tf(s,a)
+\]
+or it could be a neural net with parameters $\psi$.
+
+\section{Feature Matching Inverse RL}
+Let us focus on the linear reward function design for now. Since it is a weighted sum of features, one natural interpretation to match the features is to match the expectation of important features. Let $\pi^{r_\psi}$ be the optimal policy for reward function$r_\psi$, then we to design the reward, we are picking $\psi$ such that 
+\[
+\mathbb{E}_{\pi^{r_\psi}}[f(s,a)] = \mathbb{E}_{\pi^*}[f(s,a)]
+\]
+The right hand side expectation can be estimated using samples from expert: take $N$ samples of features, and get the average. The left hand side expectation is a little involved. One way to do it is to use any RL algorithm to maximize $r_\psi$, which is defined using the right hand side samples, and then produce $\pi^{r_\psi}$, and then we can use this policy to generate more samples. Another way is to use dynamic programming if we are given the transitions. To ensure the equality holds, we borrow some ideas from the support vector machine classifier, where we maximize the margin between the optimal policy's rewards and that of any other policy:
+\[
+\max_{\psi,m} m\;\;\text{s.t. }\;\psi^T\mathbb{E}_{\pi^*}[f(s,a)]\geq \max_{\pi\in \Pi}\psi^T\mathbb{E}_\pi[f(s,a)]+m
+\]
+but we also need to address the similarity between $\pi$ and $\pi^*$ so that similar policies do not need to abide by the $m$ margin requirement.
+
+Using the SVM trick (with the use of Lagrangian dual), we can transform the above optimization into the following which also contains a function that measures the similarity between policies:
+\[
+\min_\psi \frac{1}{2}\lvert|\psi|\rvert^2\;\; \text{s.t. }\;\psi^T\mathbb{E}_{\pi^*}[f(s,a)]\geq \max_{\pi\in \Pi}\psi^T\mathbb{E}_\pi[f(s,a)]+D(\pi,\pi^*)
+\]
+where $D(\pi,\pi^*)$ measures the difference in feature expectations. However, such approaches have some issues: maximizing the margin is a bit arbitrary, and there is no clear model of expert suboptimality (can add slack variables). Furthermore, now we have a messy constrained optimization problem, which is not great for deep learning!
+
+\section{Learning the Optimality Variable}
+Recall that in last chapter, we introduced the optimality variable $\mathcal{O}_t$ to indicate if the agent is acting optimally. It turns out that as we learn the reward function, we are also learning the optimality variable. The optimality variable is defined as $p(\mathcal{O}_t|s_t,a_t) = \exp(r_\psi(s_t,a_t))$. Since the reward parameter $\psi$ is unknown, the optimality distribution should also depend on $\psi$: $p(\mathcal{O}_t|s_t,a_t,\psi)$. Recall that \[p(\tau|\mathcal{O}_{1:T},\psi)\propto\exp \left(\sum_tr_\psi(s_t,a_t)\right)\] Note that we can ignore $p(\tau)$ in our optimiztion since it does not depend on $\psi$. We are given sample trajectories $\{\tau_i\}$ sampled from expert policy $\pi^*(\tau)$, so the maximum likelihood training can be done using:
+\[
+\max_\psi\frac{1}{N}\sum_{i=1}^N\log p(\tau_i|\mathcal{O}_{1:T},\psi) = \max_\psi\frac{1}{N}\sum_{i=1}^N r_\psi(\tau_i)-\log Z
+\]
+where $Z$ is the \textbf{partition function} needed to make the sum of probability with respect to $\tau$ 1.
+
+\subsection{Inverse RL Partition Function}
+In our maximum likelihood training, to make the probability with respect to $\tau$ sum to 1, we introduced the IRL partition function $Z$. Mathematically, $Z$ is the integral of all possible trajectories:
+\[
+Z = \int p(\tau)\exp(r_\psi(\tau))d\tau
+\]
+Then we take the gradient of the likelihood with respect to $\psi$ after plugging in $Z$:
+\begin{align*}
+\nabla_\psi \mathcal{L} &= \frac{1}{N}\sum_{i=1}^N\nabla_\psi r_\psi(\tau_i) - \frac{1}{Z}\int p(\tau)\exp(r_\psi(\tau))\nabla_\psi r_\psi(\tau)d\tau\\
+&= \mathbb{E}_{\tau\sim\pi^*(\tau)}[\nabla_\psi r_\psi(\tau_i)] - \mathbb{E}_{\tau\sim p(\tau|\mathcal{O}_{1:T},\psi)}[\nabla_\psi r_\psi(\tau)]
+\end{align*}
+The first expectation is estimated with expert samples, and the second expectation is the soft optimal policy under current reward. To increase the gradient, we want more expert trajectory and less current agent trajectory.
+
+\subsection{Estimating the Expectation}
+In the above derivation of the gradient of the likelihood, the first expectation is easy to calculate, but the second one is hard. To calculate the second expectation, we need to do some messaging:
+\begin{align*}
+    \mathbb{E}_{\tau\sim p(\tau|\mathcal{O}_{1:T},\psi)}[\nabla_\psi r_\psi(\tau)] &= \mathbb{E}_{\tau\sim p(\tau|\mathcal{O}_{1:T},\psi)}\left[\nabla_\psi\sum_{t=1}^Tr_\psi(s_t,a_t)\right]\\
+    &= \sum_{t=1}^T\mathbb{E}_{(s_t,a_t)\sim p(s_t,a_t|\mathcal{O}_{1:T},\psi)}[\nabla_\psi r_\psi(s_t,a_t)]
+\end{align*}
+Note that the distribution $p(s_t,a_t|\mathcal{O}_{1:T},\psi)$ can be rewritten using chain rule as:
+\[
+p(s_t,a_t|\mathcal{O}_{1:T},\psi) = p(a_t|s_t,\mathcal{O}_{1:T},\psi)p(s_t|\mathcal{O}_{1:T},\psi)
+\]
+where 
+\begin{align*}
+    p(a_t|s_t,\mathcal{O}_{1:T},\psi) &= \frac{\beta(s_t,a_t)}{\beta(s_t)}\\
+    p(s_t|\mathcal{O}_{1:T},\psi)&\propto\alpha(s_t)\beta(s_t)
+\end{align*}
+Therefore, the distribution is directly proportional to the product of the backward message and the forward message:
+\[
+p(a_t|s_t,\mathcal{O}_{1:T},\psi)p(s_t|\mathcal{O}_{1:T},\psi)\propto\beta(s_t,a_t)\alpha(s_t)
+\]
+If we let $\mu_t(s_t,a_t)\propto\beta(s_t,a_t)\alpha(s_t)$, then the second expectation can be written as:
+\begin{align*}
+\mathbb{E}_{\tau\sim p(\tau|\mathcal{O}_{1:T},\psi)}[\nabla_\psi r_\psi(\tau)] &= \sum_{t=1}^T\int \int \mu_t(s_t,a_t)\nabla_\psi r_\psi(\tau)ds_tda_t\\
+&= \sum_{t=1}^T\mu_t^T\nabla_\psi r_\psi
+\end{align*}
+where $\mu_t$ is the state-action visitation probability for each $(s_t,a_t)$.
+
+Now we are ready to sketch out our MaxEnt Inverse RL algorithm in Alg. \ref{alg:maxent}. We can use this to learn the reward function.
+\input{maxent.tex}
+Why is it called maximum entropy (MaxEnt)? Because in cases where $r_\psi(s_t,a_t) = \psi^Tf(s_t,a_t)$, we can show that Alg. \ref{alg:maxent} oprimizes
+\[
+\max_\psi\mathcal{H}(\pi^{r_\psi})\;\text{s.t. }\;\;
+\mathbb{E}_{\pi^{r_\psi}}[f] = \mathbb{E}_{\pi^*}[f]
+\]
+
+\section{Unknown Dynamics and Large State/Action Spaces}
+So far, MaxEnt inverse RL requires us to solve for a soft optimal policy in the inner loop, and it enumerates all state-action tuples for visitation frequency and gradient. To apply the IRL algorithms in practical problem settings, we need to handle large and continuous state and action spaces and unknown dynamics.
+
+Recall the gradient of likelihood is calculated as
+\[
+\nabla_\psi \mathcal{L} =\mathbb{E}_{\tau\sim\pi^*(\tau)}[\nabla_\psi r_\psi(\tau_i)] - \mathbb{E}_{\tau\sim p(\tau|\mathcal{O}_{1:T},\psi)}[\nabla_\psi r_\psi(\tau)]
+\]
+We know that the first expectation is easy to calculate by sampling expert data, but the second expectation which is taken under the soft optimal policy under current reward is hard to calculate. One idea to calculate it is to learn the entire soft optimal policy $p(a_t|s_t,\mathcal{O}_{1:T},\psi)$ using any max-ent RL algorithm and then run this policy to sample $\{\tau_j\}$ such that:
+\[
+\nabla_\psi \mathcal{L} = \frac{1}{N}\sum_{i=1}^N\nabla_\psi r_\psi(\tau_i) - \frac{1}{M}\sum_{j=1}^M\nabla_\psi r_\psi(\tau_j)
+\]
+where we estimate the second expectation using the current policy samples. However, this is highly impractical because this requires us to run an RL algorithm to convergence in every gradient step.
+\subsection{More Efficient Updates}
+As mentioned above, learning $p(a_t|s_t,\mathcal{O}_{1:T},\psi)$ in the inner loop in each time step is expensive. Therefore, we can relax this objective a little to make it more efficient: instead of learning the policy at each time step, we could improve the policy a little in each time step such that if the policy keeps getting better, we can generate good samples eventually. Now sampling from this improved distribution is not actually sampling from the distribution we want, which is $p(\tau|\mathcal{O}_{1:T},\psi)$, we are actually getting a biased estimate of the distribution. Therefore, to resolve this issue, we use importance sampling:
+\begin{align*}
+    \nabla_\psi \mathcal{L} &\simeq \frac{1}{N}\sum_{i=1}^N\nabla_\psi r_\psi(\tau_i) - \frac{1}{\sum_j w_j}\sum_{j=1}^M w_j\nabla_\psi r_\psi(\tau_j)\\
+    w_j &= \frac{p(\tau)\exp(r_\psi(\tau_j))}{\pi(\tau_j)}
+\end{align*}
+And if we take a closer look at the importance ratio $w_j$:
+\begin{align*}
+     w_j &= \frac{p(\tau)\exp(r_\psi(\tau_j))}{\pi(\tau_j)}\\
+     &= \frac{p(s_1)\prod_t p(s_{t+1}|s_t,a_t\exp(r_\psi(s_t,a_t))}{p(s_1)\prod_t p(s_{t+1}|s_t,a_t\pi(a_t|s_t)}\\
+     &= \frac{\exp(\sum_tr_\psi(s_t,a_t))}{\prod_t\pi(a_t|s_t)}
+\end{align*}
+With the importance ratio, each policy update with respect to $r_\psi$ brings us closer to the target distribution.
+
+\section{Inverse RL as a Generative Adversarial Network}
+The idea of inverse RL looks like a game. Specifically, we have an initial policy $\pi_\theta$, and expert demonstrations $\pi^*$. We sample trajectories $\tau_j$ from the initial policy, and $\tau_i$ from the expert policy. Then our gradient step looks like:
+\[
+\nabla_\psi \mathcal{L} \simeq \frac{1}{N}\sum_{i=1}^N\nabla_\psi r_\psi(\tau_i) - \frac{1}{\sum_j w_j}\sum_{j=1}^M w_j\nabla_\psi r_\psi(\tau_j)
+\]
+where demos are made more likely and samples are made less likely. Then we update the initial policy $\pi_\theta$ with respect to $r_\psi$:
+\[
+\nabla_\theta\mathcal{L}\simeq \frac{1}{M}\sum_{j=1}^M\nabla_\theta \log \pi_\theta(\tau_j)r_\psi(\tau_j)
+\]
+which in turn changes the policy to make it harder to distinguish from demos.
+
+This looks a lot like a GAN. In a GAN, we have a generator that takes in some noise $z$, and outputs a distribution $p_\theta(x|z)$. We sample from the generator distribution $p_\theta(x)$. There is also demonstration data, for example, the real images, which we sample from its distribution $p^*(x)$. There is a discriminator parameterized by $\psi$ that determines if the data generated by the generator is real: $D(x) = p_\psi(\text{real}|x)$. We update the discriminator parameter by maximizing the binary log likelihood:
+\[
+\psi = \argmaxA_\psi \frac{1}{N}\sum_{x\sim p^*}\log D_\psi(x) + \frac{1}{M}\sum_{x\sim p_\theta}\log(1-D_\psi(x))
+\]
+where the log likelihood of the data is from demonstration is maximized and that of the data is from generator is minimized. We also update the generator parameter $\theta$:
+\[
+\theta\leftarrow \argmaxA_\theta \mathbb{E}_{x\sim p_\theta}\log D_\psi(x)
+\]
+so as to make it harder to distinguish from demos.
+
+Therefore, interestingly, we can frame the IRL problem as a GAN. In a GAN, the optimal discriminator can be defined as:
+\[
+D^*(x) = \frac{p^*(x)}{p_\theta(x) + p^*(x)}
+\]
+For inverse RL, the optimal policy approaches $\pi_\theta(\tau)\propto p(\tau)\exp(r_\psi(\tau))$. Choosing the above optimal parameterization of the discriminator:
+\begin{align*}
+    D_\psi(\tau) &= \frac{p(\tau)\frac{1}{Z}\exp(r(\tau))}{p_\theta(\tau) + p(\tau)\frac{1}{Z}\exp(r(\tau))}\\
+    &= \frac{p(\tau)\frac{1}{Z}\exp(r(\tau))}{p(\tau)\prod_t\pi_\theta(a_t|s_t) + p(\tau)\frac{1}{Z}\exp(r(\tau))}\\
+    &= \frac{\frac{1}{Z}\exp(r(\tau))}{\prod_t\pi_\theta(a_t|s_t) + \frac{1}{Z}\exp(r(\tau))}
+\end{align*}
+then we optimize the discriminator with respect to $\psi$ such that:
+\[
+\psi \leftarrow \argmaxA_\psi \mathbb{E}_{\tau\sim p^*}[\log D_\psi(\tau)] + \mathbb{E}_{\tau\sim \pi_\theta}[\log (1-D_\psi(\tau))]
+\]
+Now we don't need the importance ratio anymore, because it is subsumed into $Z$.
+
+We could also use a general discriminator, where $D_\psi$ is just a normal binary neural net classifier. It is often simpler to set up optimization, because we have fewer moving parts. However, the discriminator knows nothing at convergence generally cannot reoptimize the reward.
+% TODO: know what it actually means

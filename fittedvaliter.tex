@@ -1,0 +1,10 @@
+\begin{algorithm}[t!]
+\caption{Fitted Value Iteration}
+\begin{algorithmic}[1]
+\label{alg:fittedvaliter}
+\WHILE{true}
+    \STATE set $y_i \leftarrow \max_{a_i}\left(r(s_i,a_i) + \gamma \mathbb{E}\left[V_\phi(s'_i)\right]\right)$
+    \STATE set $\phi \leftarrow \argminA_\phi \frac{1}{2}\Sigma_i\lvert|V_\phi(s_i) - y_i|\rvert^2$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,15 @@
+\begin{algorithm}[t!]
+\caption{Dataset Aggregation (DAgger)}
+\begin{algorithmic}[1]
+\label{alg:dagger}
+\REQUIRE Human data $\mathcal{D} = \{o_1,a_1,...,o_N,a_N\}$
+
+\WHILE{true}
+    \STATE Train $\pi_\theta(a_t|o_t)$ from human data $\mathcal{D} = \{o_1,a_1,...,o_N,a_N\}$.
+    \STATE Run $\pi_\theta(a_t|o_t)$ to get dataset $\mathcal{D}_\pi = \{o_1,...,\o_M\}$
+    \STATE Ask human to label $\mathcal{D}_\pi$ with actions $a_t$
+    \STATE Aggregate $\mathcal{D} \leftarrow \mathcal{D} \cup \mathcal{D_\pi}$
+\ENDWHILE
+\RETURN optimal imitation-learned trajectory as $\tau^{return}$
+\end{algorithmic}
+\end{algorithm}

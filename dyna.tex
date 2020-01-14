@@ -1,0 +1,15 @@
+\begin{algorithm}[t!]
+\caption{Dyna}
+\begin{algorithmic}[1]
+\label{alg:dyna}
+\REQUIRE Some exploration policy for data collection $\pi_0$
+\STATE Given state $s$, pick action $a$ using exploration policy
+\STATE Observe $s'$ and $r$, to get transition $(s,a,s',r)$
+\STATE Update model $\hat{p}(s'|s,a)$ and $\hat{r}(s,a)$ using $(s,a,s')$
+\STATE Q-update: $Q(s,a)\leftarrow Q(s,a) + \alpha\mathbb{E}_{s',r}\left[r + \max_{a'} Q(s',a')-Q(s,a)\right]$
+\FOR{$K$ times}
+\STATE Sample $(s,a)\sim \mathcal{B}$ from buffer of past states and actions
+\STATE Q-update: $Q(s,a)\leftarrow Q(s,a) + \alpha\mathbb{E}_{s',r}\left[r + \max_{a'} Q(s',a')-Q(s,a)\right]$
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}

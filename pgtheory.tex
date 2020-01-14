@@ -1,0 +1,118 @@
+\chapter{Policy Gradients Theory}
+Why does Policy Gradient algorithm work? Recall our generic policy gradient algorithm: we are essentially looping to constantly estimate the advantage function $\hat{A}^\pi(s_t,a_t)$ for the current policy $\pi$, and then we use this estimate to improve the policy by taking a gradient step on the policy parameter $\theta$, as shown in Alg. \ref{alg:reinforce}. This is very similar to the policy iteration algorithm that we discussed in last chapter; the idea of policy iteration is to constantly evaluate the advantage function $A^\pi(s,a)$ and update the policy accordingly using the $\argmaxA$ implicit policy. In this chapter, we are going to dive deeper into the policy gradient algorithm, and we will show that the policy gradient algorithm can be reduced to our policy iteration algorithm, which we will prove mathematically. 
+
+\section{Policy Gradient as Policy Iteration}
+The sum of rewards of RL was defined as $J(\theta) = \mathbb{E}_{\tau\sim p_\theta(\tau)}\left[\sum_t\gamma^tr(s_t,a_t)\right]$, which is an expectation taken under the trajectory distribution. We claim that given a new parameter $\theta'$, $J(\theta') - J(\theta) = \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_t\gamma^tA^{\pi_\theta}(s_t,a_t)\right]$, which is an expectation taken under the new policy's trajectory distribution. The difference of the two sums of rewards is the improvement of applying the new policy compared to using the old policy. We claim that this improvement is equal to the expected value of the old policy's advantage function value taken under the new policy's trajectory distribution. The proof is as follows:
+\begin{align*}
+    J(\theta') - J(\theta) &= J(\theta') - \mathbb{E}_{s_0\sim p(s_0)}\left[V^{\pi_\theta}(s_0)\right]\\
+    &= J(\theta') - \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[V^{\pi_\theta}(s_0)\right]\\
+    &= J(\theta') - \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_{t=0}^\infty\gamma^t V^{\pi_\theta}(s_t) - \sum_{t=1}^\infty\gamma^tV^{\pi_\theta}(s_t)\right]\\
+    &= J(\theta') + \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_{t=0}^\infty\gamma^t\left(\gammaV^{\pi_\theta}(s_{t+1}) - V^{\pi_\theta}(s_t)\right)\right]\\
+    &= \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_{t=0}^\infty\gamma^tr(s_t,a_t)\right] + \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_{t=0}^\infty\gamma^t\left(\gammaV^{\pi_\theta}(s_{t+1}) - V^{\pi_\theta}(s_t)\right)\right]\\
+    &= \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_{t=0}^\infty\gamma^t\left(r(s_t,a_t) + \gamma V^{\pi_\theta}(s_{t+1})-V^{\pi_\theta}(s_t)\right)\right]\\
+    &= \mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_{t=0}^\infty\gamma^tA^{\pi_\theta}(s_t,a_t)\right]
+\end{align*}
+In the first two steps, we swapped out the initial states distribution in the expectation. This might seem weird at the first sight, but the intuition is that the initial state marginal is the same for any policy. Therefore, the expectation taken under the initial state marginal can be equivalently written as any policy's trajectory distribution, and for simplicity, we choose the policy of interest $\pi'$, with corresponding parameter $\theta'$.
+
+Now we have proved our claim, but we see the result has a distribution mismatch: the expectation we take is under $\pi_{\theta'}$, but the advantage function $A$ is under $\pi_\theta$. It would be nice if we could make the two distributions the same. Therefore, we make use of our powerful statistical tool: \textbf{importance sampling}:
+
+\begin{align*}
+\mathbb{E}_{\tau\sim p_{\theta'}(\tau)}\left[\sum_{t=0}^\infty\gamma^tA^{\pi_\theta}(s_t,a_t)\right] &= \sum_t\mathbb{E}_{s_t\sim p_{\theta'}(s_t)}\left[\mathbb{E}_{a_t\sim \pi_{\theta'}(a_t|s_t)}\left[\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right]\\
+&=\sum_t\mathbb{E}_{s_t\sim p_{\theta'}(s_t)}\left[\mathbb{E}_{a_t\sim \pi_{\theta}(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right]
+\end{align*}
+
+Now the outer expectation is still under $\theta'$ state marginal. Can we simply ignore the distribution mismatch and say that it is approximately equal to $\sum_t\mathbb{E}_{s_t\sim p_{\theta}(s_t)}\left[\mathbb{E}_{a_t\sim \pi_{\theta}(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right]$, which we define as $\bar{A}(\theta')$? We would be all set if the approximation holds, because if so, then $J(\theta') - J(\theta) \simeq \bar{A}(\theta')$, which means we can calculate $\nabla_{\theta'}\bar{A}(\theta')$ without generating new samples and calculating any new advantage functions because the only term that depends on $\theta'$ in $\bar{A}(\theta')$ is the policy term in the numerator of importance sampling ratio. Thus, we can just use the current samples from $\pi_\theta$.
+
+\section{Distribution Mismatch Bound}
+As we discussed above, if we could ignore the distribution mismatch, then we would solve a number of problems. So when can we indeed ignore the distribution mismatch? We claim that $p_\theta(s_t)$ is close to $p_{\theta'}(s_t)$ when $\pi_\theta$ is close $\pi_{\theta'}$. This claim sounds rather silly, but in light of this claim, we could quantify the mismatch and bound the distribution change.
+
+\subsection{A Simple $\epsilon$ Bound}
+First, let us assume that $\pi_\theta$ is deterministic, which means $a_t = \pi_\theta(s_t)$. Then as we have seen in imitation learning, $\pi_{\theta'}$ is close to $\pi_\theta$ if $\pi_{\theta'}(a_t\neq \pi_\theta(s_t)|s_t)\leq \epsilon$. Using the same probability bound we defined in imitation learning, we have the new policy's state marginal defined as:
+$$p_{\theta'}(s_t) = (1-\epsilon)^tp_\theta(s_t) + (1-(1-\epsilon)^t)p_{mistake}(s_t)$$
+and we can bound the prior distribution mismatch by using:
+\begin{align*}
+  |p_{\theta'}(s_t) - p_\theta(s_t)| &= (1-(1-\epsilon)^t)|p_{mistake}(s_t) - p_\theta(s_t)|\\
+  &\leq 2(1-(1-\epsilon)^t)\\
+  &\leq2\epsilon t
+\end{align*}
+This is not a good bound, but it is a bound.
+
+Now let's focus on the more general case, that $\pi_\theta$ is am arbitrary distribution. Then we can try to quantify the notion of ``close'' by saying $\pi_\theta$ is close to $\pi_{\theta'}$ if:
+$$|\pi_{\theta'}(a_t|s_t) - \pi_\theta(a_t|s_t)| \leq \epsilon \; \forall s_t$$
+Here is a useful lemma that we will use later: if $|p_X(x) - p_Y(y)| = \epsilon$, then there exists a joint distribution of $x,y$, which we call $p(x,y)$ such that $p(x) = p_X(x)$ and $p(y) = p_Y(y)$ and $p(x=y) = 1-\epsilon$. Equivalently, this means that under these circumstances, $p_X(x)$ agrees with $p_Y(y)$ with probability $\epsilon$. If we plug in our $\pi_\theta$ and $\pi_{\theta'}$, then we can show that $\pi_{\theta'}(a_t|s_t)$ takes a different action than $\pi_\theta(a_t|s_t)$ with probability less than $\epsilon$. Using this lemma, we have the same bound as in the deterministic case:
+\begin{align*}
+  |p_{\theta'}(s_t) - p_\theta(s_t)| &= (1-(1-\epsilon)^t)|p_{mistake}(s_t) - p_\theta(s_t)|\\
+  &\leq 2(1-(1-\epsilon)^t)\\
+  &\leq2\epsilon t
+\end{align*}
+Now let us first focus on a more general case where we have a generic function of state $f(s_t)$:
+\begin{align*}
+    \mathbb{E}_{p_\theta'}(s_t)[f(s_t)] &= \sum_{s_t}p_{\theta'}(s_t)f(s_t)\\
+    &\geq \sum_{s_t}p_\theta(s_t)f(s_t) - |p_\theta(s_t) - p_{\theta'}(s_t)|*\max_{s_t}f(s_t)\\
+    &\geq \mathbb{E}_{p_\theta(s_t)}[f(s_t)] - 2\epsilon t\max_{s_t}f(s_t)
+\end{align*}
+Now, putting it all together, let us plug in the term inside the expectation taken under the mismatched distribution:
+\begin{multline}
+    \sum_t\mathbb{E}_{s_t\sim p_{\theta'}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right]\\
+    \geq \sum_t\mathbb{E}_{s_t\sim p_{\theta}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right] - \sum_t 2\epsilon C
+\end{multline}
+where the constant term $C$ is a constant depending on the maximum reward, so in the finite horizon case, it should be of $O(Tr_{max})$, and in infinite horizon case, it should be of $O(r_{max}\gamma^t$, which can be simplified by convergence theory to $O(\frac{r_{max}}{1-\gamma})$ Therefore, for small $\epsilon$, we can simply ignore the mismatch. 
+
+What have we proved? We have proved that we can update the policy parameter $\theta'$ by
+$$\theta' \leftarrow \argmaxA_{\theta'} \sum_t \mathbb{E}_{s_t\sim p_{\theta}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right]$$
+such that $|\pi_{\theta'}(a_t|s_t) - \pi_{\theta}(a_t|s_t)|\leq \epsilon$ if $\epsilon$ is small.
+
+\subsection{A More Convenient Bound - KL Divergence}
+We now use a better, more convenient bound, which is the KL-divergence. We claim that we can apply the aforementioned update if the total variational divergence is bounded by the KL-divergence as follows:
+$$|\pi_{\theta'}(a_t|s_t) - \pi_{\theta}(a_t|s_t)|\leq \sqrt{\frac{1}{2}D_{KL}(\pi_{\theta'}(a_t|s_t)||\pi_{\theta}(a_t|s_t)}$$
+where KL-divergence is defined as:
+$$D_{KL}(p_1(x)||p_2(x)) = \mathbb{E}_{x\sim p_1(x)}\left[\log\frac{p_1(x)}{p_2(x)}\right]$$
+
+Then the update rule of the policy parameter becomes:
+$$\theta' \leftarrow \argmaxA_{\theta'} \sum_t \mathbb{E}_{s_t\sim p_{\theta}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right]$$
+such that $D_{KL}(\pi_{\theta'}(a_t|s_t)||\pi_{\theta}(a_t|s_t))\leq \epsilon$. We have guaranteed improvement if we have small $\epsilon$.
+
+\subsection{Enforcing the Distribution Mismatch Constraint}
+Now how do we incorporate the constraint on the distribution mismatch with our objective? One way to do it is to introduce a Lagrangian because we have the following optimization problem:
+\begin{equation}
+\begin{aligned}
+\theta'\leftarrow \argmaxA_{\theta'} \sum_t \mathbb{E}_{s_t\sim p_{\theta}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right]\\
+\mathrm{s.t. }\;D_{KL}(\pi_{\theta'}(a_t|s_t)||\pi_{\theta}(a_t|s_t))\leq \epsilon
+    \end{aligned}
+\end{equation}
+Then we can have our Lagrangian $\mathcal{L}(\theta', \lambda)$ as
+$$\mathcal{L}(\theta', \lambda) = \sum_t \mathbb{E}_{s_t\sim p_{\theta}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t A^{\pi_\theta}(s_t,a_t)\right]\right] - \lambda(D_{KL}(\pi_{\theta'}(a_t|s_t)||\pi_{\theta}(a_t|s_t)) - \epsilon)$$
+Then we optimize in terms of the Lagrangian by first maximizing $\mathcal{L}(\theta', \lambda)$ with respect to $\theta'$, which we can just do incompletely for a few gradient steps, then we update the dual variable by $\lambda \leftarrow \lambda + \alpha(D_{KL}(\pi_{\theta'}(a_t|s_t)||\pi_{\theta}(a_t|s_t)) - \epsilon)$. This technique is an instance of dual gradient descent, and we will talk about it more in depth in a later chapter. Essentially, the intuition is that we raise $\lambda$ if the constraint is violated too much, and else lower it. 
+
+\subsection{Other Optimization Techniques}
+There are also some other ways to optimize based on the distribution mismatch bound. One way to do it is by using 1st order Taylor expansion. Since $\theta' \leftarrow \argmaxA_{\theta'}\bar{A}(\theta')$, we can apply first order Taylor expansion by
+\begin{equation}
+\begin{aligned}
+\theta'\leftarrow \argmaxA_{\theta'} \nabla_{\theta}\bar{A}(\theta)(\theta'-\theta)\\
+\mathrm{s.t. }\;D_{KL}(\pi_{\theta'}(a_t|s_t)||\pi_{\theta}(a_t|s_t))\leq \epsilon
+    \end{aligned}
+\end{equation}
+
+From what we have learned in policy gradients, we can derive the gradient of $\bar{A}$ as follows:
+$$\nabla_{\theta}\bar{A}(\theta) = \sum_t \mathbb{E}_{s_t\sim p_{\theta}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\frac{\pi_{\theta'}(a_t|s_t)}{\pi_\theta(a_t|s_t)}\gamma^t\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t) A^{\pi_\theta}(s_t,a_t)\right]\right]$$
+and if we have $\pi_\theta \simeq \pi_{\theta'}$, then we can effectively cancel out the importance ratio:
+$$\nabla_{\theta}\bar{A}(\theta) = \sum_t \mathbb{E}_{s_t\sim p_{\theta}}(s_t)\left[\mathbb{E}_{a_t\sim \pi_\theta(a_t|s_t)}\left[\gamma^t\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t) A^{\pi_\theta}(s_t,a_t)\right]\right] = \nabla_\theta J(\theta)$$
+just like normal policy gradient.
+
+Consequently, our original optimization problem can be equivalently written as:
+\begin{equation}
+\begin{aligned}
+\theta'\leftarrow \argmaxA_{\theta'} \nabla_{\theta}J(\theta)^T(\theta'-\theta)\\
+\mathrm{s.t. }\;D_{KL}(\pi_{\theta'}(a_t|s_t)||\pi_{\theta}(a_t|s_t))\leq \epsilon
+    \end{aligned}
+\end{equation}
+We now have the RL objective in our optimization, then can we just use gradient ascent just like what we did in policy gradient? Well, it turns out gradient ascent is enforcing some other constraint:
+\begin{equation}
+\begin{aligned}
+\theta'\leftarrow \argmaxA_{\theta'} \nabla_{\theta}J(\theta)^T(\theta'-\theta)\\
+\mathrm{s.t. }\;\lvert|\theta'-\theta|\rvert^2\leq \epsilon
+    \end{aligned}
+\end{equation}
+whose update rule can be written as $\theta' \leftarrow \theta + \sqrt{\frac{\epsilon}{\lvert|\nabla_\theta J(\theta)|\rvert^2}}\nabla_\theta J(\theta)$, and the square root term is just our learning rate, which depends on $\epsilon$.
+
+Since the two optimization problems are not the same, we will tweak the KL-divergence constraint a little bit using Taylor expansion one more time. If the two policies are very similar to each other, one could approximate KL-divergence by $D_{KL}(\pi_(\theta')||\pi_\theta) \simeq \frac{1}{2}(\theta' - \theta)^TF(\theta'-\theta)$, where $F$ is called the Fisher-information matrix, and it is defined as $\mathbb{E}_{\pi_\theta}\usepackage{\left[\nabla_\theta\log \pi_\theta(a|s)\nabla_\theta\log\pi_\theta(a|s)^T\right]}$. This matrix $F$ can be estimated using samples, and it gives us a convenient quadratic bound. Using a technique similar to Newton-Raphson, we can update the parameter by $\theta' \leftarrow \theta  + \alpha F^{-1}\nabla_\theta J(\theta)$, and the learning rate $\alpha$ can be chosen as $\alpha = \sqrt{\frac{2\epsilon}{\nabla_\theta J(\theta)^TF\nabla_\theta}}$. Now our update rule is a lot more similar to gradient descent, except that in gradient descent, the l2 norm constrains the update step into a circle, while in our 2nd order approximation of KL-divergence, it constrains the update step into a ellipse. 
