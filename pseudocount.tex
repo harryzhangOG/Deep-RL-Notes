@@ -1,0 +1,14 @@
+\begin{algorithm}[t!]
+\caption{Exploring with Pseudo-count}
+\begin{algorithmic}[1]
+\label{alg:pseudocount}
+\REQUIRE Some base model $p_\theta(s)$
+\WHILE{not done}
+\STATE Fit model $p_\theta(s)$ to all the states $\mathcal{D}$ seen so far
+\STATE Take a step $i$ and observe $s_i$
+\STATE Fit model $p_{\theta'}(s)$ to $\mathcal{D}\cup s_i$
+\STATE Use $p_\theta(s_i)$ and $p_{\theta'}(s')$ to estimate $\hat{N}(s)$
+\STATE Set $r^+(s,a) = r(s,a) + \mathcal{B}(\hat{N}(s))$
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}

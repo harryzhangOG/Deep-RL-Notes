@@ -1,0 +1,237 @@
+\chapter{Exploration}
+In reinforcement learning, we aim to balance exploitation and exploration. In a lot of setting, exploring with random behaviors does not give us satisfactory result due to the highly complex environment. Explorations mainly concerns with two different questions: how can an agent discover high-reward strategies that require a temporally extended sequence of complex behaviors that, individually, are not rewarding? How can an agent decide whether to attempt new behaviors (to discover ones with higher reward) or continue to do the best thing it knows so far? Long story short, we can define exploitation as doing what you know will yield highest reward, and exploration as  doing things you haven’t done before, in the hopes of getting even higher reward. In order to explore well, we need to come up with some smart strategies to discover some better way to gain rewards. To illustrate, let us look at a classic example of exploration and exploitation trade-off. Say you want to eat in a restaurant, to exploit, you would eat at your favorite restaurant, but to explore, you would go to a new restaurant and see if it is better than your favorite one. 
+
+\section{Multi-arm Bandits}
+A bandit problem is a type of simple exploration problem. The term comes from the name of a popular slot machine. We are interested in multi-arm bandits where each arm gives us different reward, and we are mainly concerned with the question of pulling which arm gives us the best reward among all arms.
+
+Mathematically, our actions to choose are
+\[
+\mathcal{A} = \{\text{pull}_1,\text{pull}_2,\dots,\text{pull}_n\}
+\]
+since we have $n$ arms, and assume there is a true distribution of which arm gives us a higher reward, which we do not know a priori:
+\[
+r(a_n)\sim p(r|a_n)
+\]
+
+\subsection{Defining a Bandit}
+Assume our reward for each arm $r_i$ comes from a distribution $r(a_i)\sim p_{\theta_i}(r_i)$. For example, if our reward is a binary variable then we can define $p_{\theta_i}(r_i)$ as
+\[
+p(r_i=1) = \theta_i,\;\;p(r_i=0) = 1-\theta_i
+\]
+We also know that $\theta_i\sim p(\theta)$, but we do not know anything else about the distribution.
+
+This actually defines a meta-level POMDP. Our latent state is actually $s = [\theta_1,\dots,\theta_n]$, which is the true parameterization of the arms' reward distribution. We also have a belief state, which is our observation in some sense. The belief state is an estimate of the probability of getting high reward of each arm:
+\[
+\hat{p}(\theta_1,\dots,\theta_n)
+\]
+
+To measure the goodness of exploration algorithm, we define the regret of exploration. The regret of exploration is the difference from optimal policy at time step $T$:
+\[
+Reg(T) = T\mathbb{E}[r(a^*)] - \sum_{t=1}^Tr(a_t)
+\]
+where the first term means in hindsight, how much reward could I have got if I had taken the best action all the way until the end, and the second term means the actual reward I have got. The difference of these two gives us the reward.
+
+\subsection{Optimistic Exploration}
+One simple way to explore is to use an optimistic exploration strategy, where we keep track of average reward $\hat{\mu}_a$ for each action $a$. Naturally, one way to pick an action is the greedy exploitation:
+\[
+a = \argmaxA\hat{\mu}_a
+\]
+then to explore better, we need to add bonus to new actions too:
+\[
+a = \argmaxA\hat{\mu}_a + C\sigma_a
+\]
+where $\sigma_a$ is some quantification of uncertainty about action $a$. 
+
+The intuition behind this strategy is to try each arm until you are sure that it is not great. Therefore, if you think an action might be good, go on and try it for a few more times, and try something else if you are sure it is not good.
+
+One popular method to gauge the uncertainty about an action is to use the upper confidence bound (UCB). Specifically, 
+\[
+a = \argmaxA\hat{\mu}_a + \sqrt{\frac{2\ln T}{N(a)}}
+\]
+where $N(a)$ counts the number of times that we have applied action $a$. Using this strategy, we can get a bound of regret $O(\log T)$.
+
+\subsection{Probability Matching}
+Recall we have a belief state model that represents our own estimate of each arm's reward parameterization:
+\[
+\hat{p}(\theta_1,\dots,\theta_n)
+\]
+We can improve our belief state by keep updating it. The idea is to sample $(\theta_1,\dots,\theta_n)$ from the distribution, and pretend that the model $(\theta_1,\dots,\theta_n)$ is correct, then we take the optimal action and update the belief model. Then we take the action by $a = \argmaxA_a\mathbb{E}_{\theta_a}[r(a)]$.
+
+This is called posterior sampling or Thompson sampling. This method is harder to analyze theoretically, but can work very well empirically.
+\subsection{Information Gain}
+Say we want to determine some latent variable $z$, one way to decide which action to take is look at the entropy of the estimate of the prior $\mathcal{H}(\hat{p}(z))$. Intuitively, the entropy should be high if our estimate is off, and low if our estimate is accurate. By the same token, we can incorporate evidence $y$ with this entropy so that we look at the entropy $\mathcal{H}(\hat{p}(z|y))$ in order to see if the entropy changes after $y$ is known to us. For example, $y$ could be the reward $r(a)$. 
+
+The \textbf{information gain} of observing $y$ is defined as
+\[
+IG(z,y) = \mathbb{E}_y[\mathcal{H}(\hat{p}(z)) - \mathcal{H}(\hat{p}(z|y))]
+\]
+which is the expected decrease of entropy after observing $y$. Note that we do not know what $y$ actually is, but we have some knowledge of what it might be. This is why we are taking the expected value. Typically, the information gain also depends on the action so we can have $IG(z,y|a)$. Hence,
+\[
+IG(z,y) = \mathbb{E}_y[\mathcal{H}(\hat{p}(z)) - \mathcal{H}(\hat{p}(z|y))|a]
+\]
+it measures how much we learn from $z$ from action $a$, given the current beliefs.
+
+In our exploration setting, the observation is the observed reward:
+\[
+y = r(a)
+\]
+the latent state is the parameters for model $p(r_a)$:
+\[
+z = \theta_a
+\]
+then the information gain of $a$ is calculated as:
+\[
+g(a) = IG(\theta_a,r_a|a)
+\]
+we also define another quantity $\Delta(a)$ that measures the expected suboptimality of $a$:
+\[
+\Delta(a) = \mathbb{E}[r(a^*) - r(a)]
+\]
+As a result we take action according to the rule
+\[
+a = \argminA_a\frac{\Delta(a)^2}{g(a)}
+\]
+This rule intuitively means that we do not take an action if we are sure if it is optimal (large $\Delta(a)$), or if we cannot learn anything from applying that action (small $g(a)$).
+
+We talked about bandits models because bandits are easier to analyze and understand. We can derive foundations for exploration methods, ane then apply these methods to more complex MDPs. Most exploration strategies require some kind of uncertainty estimation (even if it’s naïve). We usually assumes some value to new information. For example, we assume unknown means good (optimism), sample means truth, and information gain means good.
+
+\section{Exploration in MDPs}
+Recall our UCB exploration policy to choose action:
+\[
+a = \argmaxA\hat{\mu}_a + \sqrt{\frac{2\ln T}{N(a)}}
+\]
+here $N(a)$ is the exploration bonus.
+
+Can we apply the same idea in MDPs, which are what we work with in RL? Essentially, we can do the same exploration bonus $N(s,a)$ or $N(s)$ and add it to the reward:
+\[
+r^+(s,a) = r(s,a) + \mathcal{B}(N(s))
+\]
+where the bonus $N(s)$ decreases with the increase of visitation frequency, and then we use $r^+(s,a)$ instead of $r(s,a)$ in any model-free algorithm. This is a simple addition to any RL algorithm, but we need to tune the bonus weight.
+
+\subsection{Counting the Exploration Bonus}
+We count the number of times that we have encountered the state $s$ using $N(s)$. However, in many situations such as video games or autonomous driving, we never actually see the exact same state twice. Therefore, we need to take the notion of similarity into account: we count the number of times we have encountered similar states, instead of the same states. 
+
+The idea is to fit a density model $p_\theta(s)$ or $p_\theta(s,a)$ to the states. $p_\theta(s)$ is low for very novel states, and high for states that are very similar to the states we have seen, even if it might be completely new. To design this density model, we can seek some inspirations from a simple small MDP. If we have a small MDP, then the density of visiting a state $s$ is modeled as:
+\[
+P(s) = \frac{N(s)}{n}
+\]
+and if we see the same state again, this density becomes:
+\[
+P'(s) = \frac{N(s)+1}{n+1}
+\]
+we design our neural net density model obeying the same rule. 
+
+We devise a deep pseudo-count procedure to count the states as shown in Alg. \ref{alg:pseudocount}
+\input{pseudocount.tex}
+In step 5, we solve for $\hat{N}$ using the following equations:
+\begin{align*}
+    p_\theta(s_i) &= \frac{\hat{N}(s_i)}{\hat{n}}\\
+    p_{\theta'}(s_i) &= \frac{\hat{N}(s_i)+1}{\hat{n}+1}
+\end{align*}
+this two equations with two unknowns, and we solve for $\hat{N},\hat{n}$ as follows:
+\begin{align*}
+    \hat{N} &= \hat{n}p_\theta(s_i)\\
+    \hat{n} &= \frac{1-p_{\theta'}(s_i)}{p_{\theta'}(s_i) - p_{\theta}(s_i)}p_{\theta}(s_i)
+\end{align*}
+These counters are able to count similar states.
+
+\section{Exploration with Q-functions}
+Recall in earlier chapters, we covered epsilon-greedy exploration strategy. This strategy is essentially taking random actions with a probability of $\epsilon$. However, in many cases, exploring by taking random actions might not be ideal. For example, in the Atari game called SeaQuest, taking random actions by going back and forth might make the submarine run out of oxygen quickly without exploring meaningful states. Therefore, we need to explore more efficiently by sticking to one general strategy for an extended period of time. 
+
+Thus, we introduce exloring with Q-functions. Exploring with random actions (e.g., epsilon-greedy) is not efficient enough because we oscillate back and forth, so we might not go to a coherent or interesting place. However, exploring with random Q-functions make us commit to a randomized but internally consistent strategy for an entire episode, so we act coherently in the same episode. 
+
+To do this, we maintain a distribution of Q-functions. This distribution could be any Q-function with artificial Gaussian noise. Then we sample a Q-function from this distribution $p(Q)$, and act according to this function for the entire episode. Then we update $p(Q)$ and repeat. Since Q-learning is off-policy, we don’t care which Q-function was used to collect data. 
+
+Using this method, we don't need to modify the original reward function since we are just doing off-policy Q-learning, but in many cases good exploration bonus functions tend to do better.
+
+\section{Revisiting Information Gain in MDP Exploration}
+In MDPs, we can also use information gain $IG(z,y|a)$ which was introduced in the multi-arm bandit problem. However, we need to figure out what information gain we are looking for exactly. First, we can find information gain about reward $r(s,a)$. However, this is not useful when the reward is sparse, so nothing meaningful could come out from this. We could also find information gain about state density $p(s)$, where we can find how much the state visitation changes after we know something. This is useful because $p(s)$ changes drastically if the information gain is big enough. We could also learn the information gain about the transition model $p(s'|s,a)$, which is good for learning the MDP itself. However, none of the above three different settings can be calculated exactly. Thus, we need a proxy to estimate the information gain. 
+
+\subsection{Prediction Gain}
+One way to approximate the information gain is to use the prediction gain:
+\[
+\log p_{\theta'}(s) - \log_\theta(s)
+\]
+which is used on state densities. This quantity takes the difference between the density before and after seeing the state $s$. Therefore, if the prediction gain is big, then the state $s$ is novel.
+\subsection{Variational Information Maximization for Exploration (VIME)}
+This method to approximate the information gain was first introduced in \cite{houthooft2016vime} by Houthooft et al.. Mathematically, the information gain can be equivalently written in terms of KL divergence as:
+\[
+D_{KL}(p(z|y)||p(z))
+\]
+There is some quantity about the MDP we want to learn about, which in this case, without loss of generality, is the transition
+\[
+p_\theta(s_{t+1}|s_t,a_t)
+\]
+then in the parametrization of the information gain, what we want to learn about is the parameter of the quantity of interest $\theta$. $z$ could also be some other distributions that involve $\theta$ such as $p_\theta(s)$ and $p_\theta(r|s,a)$. The evidence $y$ we observe is the transition. Therefore:
+\begin{align*}
+    z &= \theta\\
+    y &= (s_t,a_t,s_{t+1})
+\end{align*}
+Our information gain in terms of KL-divergence can be set up as
+\[
+D_{KL}(p(\theta|h,s_{t+1},s_t,a_t)||p(\theta|h))
+\]
+where $h$ is the history of all prior transitions. Therefore, intuitively, the transition we observe is more intuitive if it causes the belief over $\theta$ to change.
+
+The idea of VIME is to use variational inference to approximate $p(\theta|h)$ since maintaining the whole history $h$ is not feasible. So we use a distribution to approximate the history:
+\[
+q(\theta|\phi) \simeq p(\theta|h)
+\]
+the new distribution is parameterized by $\phi$, so when we observe a new transition, we update $\phi$ to get $\phi'$.
+
+As you recall, we update the parameters by optimizing the variational lower bound
+\[
+D_{KL}(q(\theta|\phi)||p(h|\theta)p(\theta)
+\]
+and we represent $q(\theta|\phi)$ as a product of independent Gaussians of parameter distributions with mean $\phi$. 
+
+After updating $\phi'$, we use $D_{KL}(q(\theta|\phi')||q(\theta|\phi))$ as the approximate information gain. 
+
+\section{Improving RL with Imitation}
+Imitation learning is simple, stable supervised learning, but it requires demonstrations, and it must address distributional shift. Furthermore, the state of the art imitation learning can only be as good as the demo. In contrast, reinforcement learning can become arbitrarily good, but it requires reward function, and must address exploration. Also, it often does not have convergence guarantees.
+\subsection{Pretrain and Finetune}
+Can we somehow combine the two such that we have both demonstrations data and rewards? The answer is yes. The simplest idea that is practical and works is to pretrain with imitation learning and fine tune with RL. This idea is shown in Alg. \ref{alg:pretrain}. 
+\input{pretrain.tex}
+
+The problem with Alg. \ref{alg:pretrain} is that in step 4, we might collect very bad experience due to distribution shift, so the first batch of data might be bad, thus destroying the initialization. 
+
+\subsection{Off-policy RL}
+One way to mitigate the issue of forgetting the demonstrations is to use off-policy RL because off-policy RL can use any data, and if we let it use demonstrations as off-policy samples, since demonstrations are provided as data in every iteration, they are never forgotten. Furthermore, the policy can still become better than the demos, since it is not forced to mimic them. To achieve this, we could use off-policy policy gradients and off-policy Q-learning. 
+
+Recall policy gradients with importance sampling:
+\[
+\nabla_\theta J(\theta) = \sum_{\tau\in\mathcal{D}}\left[\sum_{t=1}^T\nabla_\theta\log\pi_\theta(a_t|s_t)\left(\prod_{t'=1}^t\frac{\pi_\theta(a_{t'}|s_{t'})}{q(a_{t'}|s_{t'})}\right)\left(\sum_{t'=t}^Tr(s_{t'},a_{t'})\right)\right]
+\]
+The trick here is when we collect the sum of samples, in our samples, we include both our experience and demonstration. However, it seems a little weird because in policy gradients we actually want on-policy data, so why are we including off-policy data. To answer this question, let us build up some intuition by looking at the optimal importance sampling distribution. Say we want to estimate $\mathbb{E}_{p(x)}[f(x)]$ using importance sampling:
+\[
+\mathbb{E}_{p(x)}[f(x)] \simeq \frac{1}{N} \sum_i\frac{p(x_i)}{q(x_i)}f(x_i)
+\]
+and it can be proven that
+\[
+q\propto p(x)|f(x)|
+\]
+gives us the smallest variance. Therefore, by taking off-policy demonstration samples, we are motivating importance sampling to use distributions that have higher reward than current policy in order to get closer to the optimal distribution.
+%TODO: why
+To construct the sampling distribution, first we need to figure out which distribution the demonstrations come from. First, we could use supervised behavioral cloning to learn $\pi_{demo}$. If the demonstration is from multiple distribution, we could instead use \textbf{fusion distribution} by
+\[
+q(x) = \frac{1}{M}\sum_i q_i(x)
+\]
+
+\subsection{Q-learning with Demonstrations}
+Since Q-learning is already off-policy, there is actually no need to bother with importance weights like we did in policy gradients. Therefore, one simple solution is just drop demonstrations into the replay buffer.
+
+We can modify Alg. \ref{alg:QwRB_tn} slightly such that we initialize $\mathcal{B}$ with some demonstrations data, and then do the same things as before.
+
+\subsection{Imitation as an Auxiliary Loss Function}
+Recall the imitation learning maximum likelihood training objective is 
+\[
+\sum_{(s,a)\sim\mathcal{D}_{demo}}\log \pi_\theta(a|s)
+\]
+and the RL objective is
+\[
+\mathbb{E}_{\pi_\theta}[r(s,a)]
+\]
+to combine the two, we can come up with a hybrid objective:
+\[
+\mathbb{E}_{\pi_\theta}[r(s,a)] + \lambda \sum_{(s,a)\sim\mathcal{D}_{demo}}\log \pi_\theta(a|s)
+\]

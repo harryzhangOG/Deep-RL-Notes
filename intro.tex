@@ -10,8 +10,8 @@ We should also define a \textbf{transition function} of the environment. In the 
 
 Meanwhile, we also define a \textbf{reward function} of the environment. For example, in Pacman, the player gains one point after eating a dot, and loses 100 points after being eaten by a ghost. Formally, the reward function should be a function of both state and action, so we denote the reward function as $r(s,a)$.
 
-In reinforcement learning, we assume the states transitions are \textbf{Markovian}, meaning that the state at time step $t$ is only responsible for contributing to the state at time step $t+1$.
-Here is an illustration of a Markov chain, and the direction of the arrow means causality:
+In many reinforcement learning problems, we assume the states transitions are \textbf{Markovian}, meaning that the state at time step $t$ is only responsible for contributing to the state at time step $t+1$.
+Fig. \ref{fig:markov} an illustration of a Markov chain, and the direction of the arrow means causality.
 \begin{figure}
     \centering
     \includegraphics[scale = 0.4]{figures/markov.png}
@@ -19,7 +19,7 @@ Here is an illustration of a Markov chain, and the direction of the arrow means 
     \label{fig:markov}
 \end{figure}
 
-In control theory, such as the LQR optimization problem, we aim to minimize the cost function of the system. What would be an equivalent notion in reinforcement learning? Recall we defined a reward function, $r(s,a)$, so naturally we want to collect as much reward as possible in the environment. Without loss of genrality, we assume that the environment is stochastic. Define a trajectory distribution $p_\theta(\tau)$ according to Baye's Rule:
+In control theory, such as the LQR optimization problem, we aim to minimize the cost function of the system. What would be an equivalent notion in reinforcement learning? Recall we defined a reward function, $r(s,a)$, so naturally we want to collect as much reward as possible in the environment. Without loss of generality, we assume that the environment is stochastic. Define a trajectory distribution $p_\theta(\tau)$ according to Bayes' Rule:
 $$ p(\tau) \vcentcolon= p(s_1,a_1,...,s_T,a_T) = p(s_1)\prod_{t=1}^T\pi_\theta(a_t|s_t)p(s_{t+1}|s_t,a_t)$$
 where $T$ is the length of episode horizon. Therefore, given this trajectory distribution, we can calculate the expected value of the total reward function induced by following this trajectory as $\mathbb{E}_{\tau\sim p_\theta(\tau)}\left[\sum_t r(s_t,a_t)\right]$. Therefore, to optimize this objective, we want to find a parameter $\theta$, such that $\theta$ maximizes the above expectation:
 $$\theta = \argminA_\theta\mathbb{E}_{\tau\sim p_\theta(\tau)}\left[\sum_t r(s_t,a_t)\right]$$
@@ -29,7 +29,7 @@ To facilitate our calculation of the above expectation, and to simplify the nota
 Q function is a function of both state and action, so it is denoted as $Q(s_t,a_t)$ and it quantitatively measures the quality of taking action $a_t$ at state $s_t$. Mathematically, it is the expected sum of reward from the current time step given state $s_t$ and action $a_t$. This is very similar to the ``cost-to-go'' function in control theory, especially Model Predictive Control. We define $Q(s,a)$ as:
 $$Q^\pi(s_t,a_t) = \sum_{t'=t}^T{\mathbb{E}_{\pi_\theta}[r(s_t',a_t')|s_t,a_t]}$$
 \subsection{Value Function}
-Unlike the Q function, value function is only a function of state, so intuitively it quantitatively measures the value of being in state $s_t$. Mathematically, it is defined as $V^\pi(s_t) =\sum_{t'=t}^T{\mathbb{E}_{\pi_\theta}[r(s_t',a_t')|s_t]}$. Again by Baye's rule we can obtain the relation between Value function and Q function: $V^\pi(s_t)=\mathbb{E}_{a_t\sim\pi(a_t|s_t)}[Q^\pi(s_t,a_t)]$.
+Unlike the Q function, value function is only a function of state, so intuitively it quantitatively measures the value of being in state $s_t$. Mathematically, it is defined as $V^\pi(s_t) =\sum_{t'=t}^T{\mathbb{E}_{\pi_\theta}[r(s_t',a_t')|s_t]}$. Again by Bayes' rule we can obtain the relation between Value function and Q function: $V^\pi(s_t)=\mathbb{E}_{a_t\sim\pi(a_t|s_t)}[Q^\pi(s_t,a_t)]$.
 
 Furthermore, if we sum the value function over all possible initial states, we essentially recovered the objective of reinforcement learning: $\mathbb{E}_{s_1\sim p(s_1)[V^\pi(s_1)]}$, where $p(s_1)$ is a known distribution of all possible initial states.
 \section{Reinforcement Learning Anatomy}
