@@ -1,0 +1,13 @@
+\begin{algorithm}[t!]
+\caption{Pretrain and Fine Tune}
+\begin{algorithmic}[1]
+\label{alg:pretrain}
+\REQUIRE Demonstrations data $\mathcal{D}$
+\STATE Collect demonstration data $\mathcal{D} = \{(s_i,a_i)\}$
+\STATE Initialize $\pi_\theta$ as $\max_\theta\sum_i\log\pi_\theta(a_i|s_i)$
+\WHILE{not done}
+\STATE Run $\pi_\theta$ to collect experience
+\STATE Improve $\pi_\theta$ with any RL algorithm
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
