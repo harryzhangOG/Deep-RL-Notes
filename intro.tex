@@ -31,7 +31,7 @@ $$Q^\pi(s_t,a_t) = \sum_{t'=t}^T{\mathbb{E}_{\pi_\theta}[r(s_t',a_t')|s_t,a_t]}$
 \subsection{Value Function}
 Unlike the Q function, value function is only a function of state, so intuitively it quantitatively measures the value of being in state $s_t$. Mathematically, it is defined as $V^\pi(s_t) =\sum_{t'=t}^T{\mathbb{E}_{\pi_\theta}[r(s_t',a_t')|s_t]}$. Again by Bayes' rule we can obtain the relation between Value function and Q function: $V^\pi(s_t)=\mathbb{E}_{a_t\sim\pi(a_t|s_t)}[Q^\pi(s_t,a_t)]$.
 
-Furthermore, if we sum the value function over all possible initial states, we essentially recovered the objective of reinforcement learning: $\mathbb{E}_{s_1\sim p(s_1)[V^\pi(s_1)]}$, where $p(s_1)$ is a known distribution of all possible initial states.
+Furthermore, if we sum the value function over all possible initial states, we essentially recovered the objective of reinforcement learning: $\mathbb{E}_{s_1\sim p(s_1)}[V^\pi(s_1)]$, where $p(s_1)$ is a known distribution of all possible initial states.
 \section{Reinforcement Learning Anatomy}
 In RL, we usually have three parts in the whole pipeline. We need to keep generating data for the agent to learn, and use the data to generate samples in order to fit and regress onto a model. Then with this model, we estimate the reward and based on the reward we update our policy to maximize the reward, and we go back to step 1. Therefore, our primal concern is to efficiently run the three parts so that the agent can learn optimally with less data and computation. Here is an illustration of the three steps in Fig. \ref{fig:rlanatomy}.
 \begin{figure}
