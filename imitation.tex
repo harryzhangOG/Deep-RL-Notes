@@ -45,7 +45,7 @@ First we define two different reward functions for imitation learning. To make o
     \]
 To analyze this, let's introduce a lower bound on the probability of making mistakes: $\pi_\theta(a\neq \pi^*(s)|s)\leq \epsilon$ for all $s\sim p_{train}(s)$, where $p_{train}$ is training data distribution. The fit distribution of states $p_\theta(s)$ is consisted of two parts: the first part is the probability of no mistakes made, and the second part is the probability of making some mistakes. Using Bayes' rule, we can calculate $p_\theta(s)$ as follows:
 $$p_\theta(s_t) = (1-\epsilon)^tp_{train}(s_t)+(1-(1-\epsilon)^t)p_{mistake}(s_t)$$
-so to measure the divergence of $p_\theta$ from $p_{train}$, we take the difference of the two distriutions (naive, total variation divergence):
+so to measure the divergence of $p_\theta$ from $p_{train}$, we take the difference of the two distributions (naive, total variation divergence):
 $$|p_\theta(s_t)-p_{train}(s_t)|=(1-(1-\epsilon)^t)|p_{mistake}-p_{train}|\leq2(1-(1-\epsilon)^t)$$
 $$\leq 2\epsilon t$$
 where we used the identity that $(1-\epsilon)^t\geq1-\epsilon t$ for $\epsilon\in [0,1]$. Thus, we can calculate the expected number of mistakes the agent makes using this scheme by:
