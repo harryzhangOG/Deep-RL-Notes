@@ -52,7 +52,7 @@ where we used the identity that $(1-\epsilon)^t\geq1-\epsilon t$ for $\epsilon\i
 $$\sum_t\mathbb{E}_{p_\theta(s_t)}[c_t] = \sum_t\sum_{s_t}p_\theta(s_t)c_t(s_t)\leq\sum_t\sum_{s_t}p_{train}(s_t)c_t(s_t)+|p_\theta(s_t)-p_{train}(s_t)|c_{max}$$
 $$\leq\sum_t\epsilon+2\epsilon t$$
 $$\in O(\epsilon T^2)$$
-Also note that with DAgger $p_{train}(s)\rightarrow p_\theta(s)$. So we no longer have the second item inside the summation for DAgger. Thus for dagger, the expected value should be in $O(\epsilon T)$.
+Also note that with DAgger $p_{train}(s)\rightarrow p_\theta(s)$. So we no longer have the second item inside the summation for DAgger. Thus for DAgger, the expected value should be in $O(\epsilon T)$.
 
 As we see, when we have longer horizon length, the errors are going to be aggregated, thus making more mistakes, and this is one of the most fundamental disadvantages of imitation learning, as discussed in \cite{ross2011reduction}.
 \section{Summary}
