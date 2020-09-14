@@ -7,7 +7,7 @@
 \WHILE{true}
     \STATE Sample $\{\tau^i\}$ from $\pi_\theta(a_t|s_t)$ (run it on a robot).
     \STATE $\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_i\left(\sum_t\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_t r(s_{i,t},a_{i,t})\right)$
-    \STATE Improve policy by $theta \leftarrow \theta + \alpha\nabla_\theta J(\theta)$
+    \STATE Improve policy by $\theta \leftarrow \theta + \alpha\nabla_\theta J(\theta)$
 \ENDWHILE
 \RETURN optimal trajectory from gradient ascent as $\tau^{return}$
 \end{algorithmic}

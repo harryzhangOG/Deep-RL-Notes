@@ -10,14 +10,14 @@ With this integral, we can easily take the gradient to perform gradient descent/
 In this section, we will derive the mathematical expression of the policy gradient theorem.
 
 Recall a convenient identity:
-$$\pi_\theta(\tau)\nabla_\theta \log \pi_\theta(\tau) = \pi_\theta(\tau)\frac{\nabla_\theta \pi_\theta(\tau)}{\pi_\theta(\tau)}=\nabla \pi_\theta (\tau)$$
+$$\pi_\theta(\tau)\nabla_\theta \log \pi_\theta(\tau) = \pi_\theta(\tau)\frac{\nabla_\theta \pi_\theta(\tau)}{\pi_\theta(\tau)}=\nabla_\theta \pi_\theta (\tau)$$
 Using this identity, we can take the gradient of $J(\theta)$ in a cleaner fashion:
 \begin{align*}
 \nabla_\theta J(\theta) = \int \nabla_\theta \pi_\theta r(\tau)d\tau\\
 =\int\pi_\theta(\tau)\nabla_\theta \log \pi_\theta(\tau) r(\tau) d\tau\\
-= \mathbb{E}_{\tau\sim \pi_\theta(\tau)}[\nabla \log \pi_\theta (\tau)r(\tau)]
+= \mathbb{E}_{\tau\sim \pi_\theta(\tau)}[\nabla_\theta \log \pi_\theta (\tau)r(\tau)]
 \end{align*}
-Now, we want to get rid of the huge $\log \pi_\theta(\tau)$ from our equation. Recall that a trajectory $\tau$ is a list of states and actions, so $\pi_\theta(s_1,a_1,...,s_T,a_T) = p(s_1)\prod_{t=1}^T\pi_\theta (a_t|s_t)p(s_{t+1}|s_t,a_t)$ by Baye's rule. Then we take the log on both sides, and we end up getting $\log\pi_\theta(\tau) = \log p(s_1) + \sum_{t=1}^T \log\pi_\theta(a_t|s_t)+\log p(s_{t+1}|s_t,a_t)$.
+Now, we want to get rid of the huge $\log \pi_\theta(\tau)$ from our equation. Recall that a trajectory $\tau$ is a list of states and actions, so $\pi_\theta(s_1,a_1,...,s_T,a_T) = p(s_1)\prod_{t=1}^T\pi_\theta (a_t|s_t)p(s_{t+1}|s_t,a_t)$ by Bayes' rule. Then we take the log on both sides, and we end up getting $\log\pi_\theta(\tau) = \log p(s_1) + \sum_{t=1}^T \log\pi_\theta(a_t|s_t)+\log p(s_{t+1}|s_t,a_t)$.
 Plugging into our original gradient:
 \begin{equation}
 \begin{aligned}
@@ -27,26 +27,26 @@ Plugging into our original gradient:
 \end{equation}
 Note that in the above calculation, we cancel out $\log p(s_1)$ and $\log p(s_{t+1}|s_t,a_t)$ because we are taking the gradient with respect to $\theta$, but those two expressions do not depend on $\theta$. The first item in the final expectation is similar to maximum likelihood.
 \section{Evaluating the Policy Gradient}
-In our derivation, we mathematically derived an expression for policy gradient. However, in most cases we cannot easily obtain the expectation easily because it is highly possible to involve a huge integral. Therefore, what are we going to do if the expectation (integral) is hard to evaluate? The answer is to approximate, and more specifically, we use Monte Carlo approximation. The idea is to take N samples, and average them out:
+In our derivation, we mathematically derived an expression for policy gradient, which involves calculating an expectation. However, in most cases we cannot easily obtain this expectation easily because it is highly possible that it involves a huge, intractable integral. Therefore, what are we going to do if the expectation (integral) is hard to evaluate? The answer is to approximate, and more specifically, we use Monte Carlo approximation. The idea is to take N samples, and average them out:
 $$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t=1}^T r(s_{i,t},a_{i,t})\right)$$
-With the above gradient, we can do gradient descent (ascent) on the parameter $\theta$ by:
+where the subscripts $i, t$ means time step $t$ in the $i$-th rollout. With the above gradient, we can do gradient descent (ascent) on the parameter $\theta$ by:
 $$\theta \leftarrow \theta + \alpha\nabla_\theta J(\theta)$$ Now we are ready to propose a vanilla policy gradient algorithm by direct gradient ascent on the Monte Carlo-approximated policy gradient parameters, the REINFORCE Algorithm, as shown in Algorithm \ref{alg:reinforce}.
 \input{REINFORCE.tex}
 
 \section{Example: Gaussian Policy}
-Now let us work out a simple case of running Algorithm \ref{alg:reinforce} on a simple Gaussian policy. A Gaussian policy means that the policy function is a Gaussian distribution. Specifically, $\pi_\theta(a_t|s_t) = \mathcal{N}\left(f_\text{neural net}(s_t); \Sigma\right)$. One advantage of using a Gaussian policy is that it is easy to obtain a closed-form expression for the Gaussian derivative:
-$$\log \pi_\theta(a_t|s_t) = -\frac{1}{2}{\left\lVert f(s_t)-a_t\right\rVert}_\Sigma^2 + C$$
+Now let us work out a simple case of running Algorithm \ref{alg:reinforce} on a simple Gaussian policy. A Gaussian policy means that the policy function is a Gaussian distribution. Specifically, $\pi_\theta(a_t|s_t) = \mathcal{N}\left(f_\text{neural net}(s_t); \Sigma\right)$. One advantage of using a Gaussian policy is that it is easy to obtain a closed-form expression for the Gaussian derivative. We simply write out the quadratic discriminant function in a multivariate Gaussian distribution:
+$$\log \pi_\theta(a_t|s_t) = -\frac{1}{2}\left(f(s_t)-a_t\right)^T\Sigma^{-1}\left(f(s_t)-a_t\right) + C =  -\frac{1}{2}{\left\lVert f(s_t)-a_t\right\rVert}_\Sigma^2 + C$$
 Taking the derivative, we have:
 $$\nabla_\theta \log \pi_\theta(a_t|s_t) = -\frac{1}{2}\Sigma^{-1}(f(s_t)-a_t)\frac{df}{d\theta}$$
 And we use Gradient ascent as discussed above.
 \section{Intuition behind Policy Gradient: What are We Actually Doing?}
-Recall we mentioned that the first term inside the expectation is similar to maximum likelihood. Let us compare the two side by side. Recall the expression of the policy gradient is:
+Recall we mentioned that the first term inside the expectation is similar to maximum likelihood. Maximum Likelihood can be written as maximizing the log likelihood of an event. Let us compare the two side by side. Recall the expression of the policy gradient is:
 $$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\nabla_\theta \log \pi_\theta(\tau_i)r(\tau_i)$$
 And the Maximum Likelihood is defined as:
 $$\nabla_\theta J_{ML}(\theta)\simeq\frac{1}{N}\sum_{i=1}^N\nabla_\theta \log \pi_\theta(\tau_i)$$
 As we discussed before, the first term in the policy gradient is exactly the same as the definition of maximum likelihood!
 
-So what are we doing here when taking this gradient? Intuitively, we are assigning more weight to more rewarding trajectories by making trajectories with higher rewards more probable. Equivalently, higher-reward trajectories are likely to have more probability to be chosen. This intuition is crucial to the policy gradient methods and is illustrated in Fig. \ref{fig:trajheat}
+So what are we doing here when taking this gradient? Intuitively, we are assigning more weight to more rewarding trajectories by making trajectories with higher rewards more probable. Equivalently, higher-reward trajectories are likely to have more probability to be chosen. This intuition is crucial to the policy gradient methods and is illustrated in Fig. \ref{fig:trajheat}.
 \begin{figure}
     \centering
     \includegraphics[scale=0.5]{figures/trajheat.png}
@@ -64,12 +64,12 @@ In this expression, we do not even have the transition function in it. Long stor
 Note that we do not care about what the state actually is. Any Non-Markovian proces can be made Markovian by setting the state as the whole history. 
 
 \section{Disadvantages of the Policy Gradient}
-Recall the intuition behind the policy gradient update: we make trajectories with more reward more probable. Let's consider the following scenario: say two trajectories have similar positive rewards, while another trajectory has a low, negative reward. Then policy gradient is going to assign zero to low probability to the third reward, and high probabilities to the other two. Now imagine we add a large constant number to our reward function, and apparently it does not change the relative relation between different trajectories' rewards because we are only adding in a constant. Now the negative reward becomes positive, and policy gradient is likely to spread out the likelihood for the three trajectories since all three rewards are positive now. This is bad because our reward does not change at all in fact, but after adding in a constant, the distribution of policy gradient changed substantially. 
+Recall the intuition behind the policy gradient update: we make trajectories with more reward more probable. Let's consider the following scenario: say two trajectories have similar positive rewards, while another trajectory has a low, negative reward. Then policy gradient is going to assign zero to low probability to the third trajectory, and high probabilities to the other two. Now imagine we add a large constant number to our reward function, and apparently it does not change the relative relation between different trajectories' rewards because we are only adding in a constant. Now the negative reward becomes positive, and policy gradient is likely to spread out the likelihood for the three trajectories since all three rewards are positive now. This is bad because our reward distribution does not change at all, but after adding in a constant, the distribution of policy gradient changed substantially. 
 
-Therefore, we need to come up with some methods to reduce the variance introduced in the policy gradients. 
+This problem shows the high variance in our naive policy gradient algorithm. Therefore, we need to come up with some methods to reduce the variance introduced in the policy gradients. 
 \section{Reducing Policy Gradients Variance using Baselines}
 \subsection{Causality}
-One simple fix for high variance is to use the fact of causality: policy at time $t'$ cannot affect reward at $t$ if $t<t'$. This simple commonsensical idea allows us to discard some operands in the summation:
+One simple fix for high variance is to use the fact of causality: policy at time $t'$ cannot affect reward at $t$ if $t<t'$. This simple, commonsensical idea allows us to discard some operands in the summation:
 $$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t'=t}^T r(s_{i,t'},a_{i,t'})\right)$$
 and we define the second item in the summation as the ``reward-to-go''. Notice that in the reward-to-go term, we start the summation from time $t$ instead of 1, by causality. The idea is that we are multiplying the likelihood by smaller numbers due to the reduction of the summation term, so we can reduce the variance to some extent.
 \subsection{Baselines}
@@ -79,7 +79,7 @@ Incorporating the baseline $b$ into our original policy gradient expression:
 $$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N \nabla_\theta \log\pi_\theta(\tau)\left[r(\tau)-b\right]$$
 But, are we allowed to that? Yes, in fact, we can show that the expectation is the same with baseline $b$. To show this, we can express the expectation of baseline as:
 \begin{align*}
-\mathbb{E}\left[\nabla_\theta\log \pi_\theta(\tau)b\right]&=
+\mathbb{E}_{\pi_\theta(\tau)}\left[\nabla_\theta\log \pi_\theta(\tau)b\right]&=
 \int \pi_\theta(\tau)\nabla \log\pi_\theta(\tau)b\;d\tau\\
 &=\int \nabla_\theta \pi_\theta(\tau)b\;d\tau\\
 &=b\nabla_\theta\int\pi_\theta(\tau)\;d\tau\\
@@ -94,12 +94,12 @@ And the policy gradient with baselines is written as:
 $$\nabla_\theta J(\theta) \simeq \mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[\nabla_\theta \log\pi_\theta(\tau)\left(r(\tau)-b\right)\right]$$
 Therefore, the variance of the policy gradient can be written as follows:
 $$\mathrm{Var} = \mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[\left(\nabla_\theta \log\pi_\theta(\tau)\left(r(\tau)-b\right)\right)^2\right] - \mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[\nabla_\theta \log\pi_\theta(\tau)\left(r(\tau)-b\right) \right]^2$$
-Note that in the second expectation term of variance, it can be equivalently written as $\mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[\nabla_\theta \log\pi_\theta(\tau)r(\tau) \right]^$ since baselines are unbiased in expectation.
+Note that in the second squared expectation term of variance, it can be equivalently written as $\mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[\nabla_\theta \log\pi_\theta(\tau)r(\tau) \right]^2$ since baselines are unbiased in expectation.
 
 Now we have an expression of variance with respect to baseline $b$, we can calculate the optimal $b$ that minimizes the variance by setting the gradient of variance to 0:
 \begin{align*}
     \frac{d\mathrm{Var}}{db} &= \frac{d}{db}\mathbb{E}\left[g(\tau)^2(r(\tau)-b)^2\right]\\ &=\frac{d}{db}\mathbb{E}\left[g(\tau)^2r(\tau)^2\right] - 2\mathbb{E}\left[g(\tau)^2r(\tau)b\right] + b^2\mathbb{E}\left[g(\tau)^2\right]\\
-    &=-2\mathbb{E}\left[ g(tau)^2r(\tau)\right]+2b\mathbb{E}\left[g(\tau)^2\right]\\
+    &=-2\mathbb{E}\left[ g(\tau)^2r(\tau)\right]+2b\mathbb{E}\left[g(\tau)^2\right]\\
     &=0
 \end{align*}
 Solving the equation, we will have
@@ -114,12 +114,12 @@ We now introduce two concepts in RL: on-policy and off-policy. On-policy means t
 One solution is to use off-policy learning.
 
 \subsection{Off-policy Learning and Importance Sampling}
-We first introduce an important technique called importance sampling. Given a distribution $p(x)$, how do we calculate the expectation from samples from another distribution $q(x)$? This is the idea of importance sampling, by using an importance ratio, we can calculate the expectation from another distribution, this enabling to learn off-policy. 
+We first introduce an important technique called importance sampling. Given a distribution $p(x)$, how do we calculate the expectation from samples from another distribution $q(x)$? This is the idea of importance sampling, by using an importance ratio, we can calculate the expectation from another distribution, thus enabling to learn off-policy. 
 
 In importance sampling:
 \begin{align*}
     \mathbb{E}_{x\sim p(x)}\left[f(x)\right] &= \int p(x)f(x)\;dx\\
-    &=\int \frac{q(x)}{p(x)}f(x)\;dx\\
+    &=\int \frac{q(x)}{q(x)}p(x)f(x)\;dx\\
     &=\mathbb{E}_{x\sim q(x)}\left[\frac{p(x)}{q(x)}f(x)\right]
 \end{align*}
 
@@ -156,12 +156,12 @@ Now we focus on the cases where we do not use local approximation, when $\theta 
 Now there is a problem in the equation. Note that the ratio of the two products can be very small or very big if $T$ is big, thus increasing the variance. To alleviate the issue, one can make use of causality as we discussed before:
 \begin{align*}
     \nabla_{\theta'}J(\theta')&= \mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[  \left(  \frac{\prod_{t=1}^T\pi_{\theta'}(a_t|s_t)}{\prod_{t=1}^T\pi_{\theta}(a_t|s_t)} \right)\left( \sum_{t=1}^T\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t)  \right)\left(\sum_{t=1}^Tr(s_t,a_t)\right)  \right]\\
-    &=\mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[  \sum_{t=1}^T\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t) \left(\prod_{t'=1}^T \frac{\pi_{\theta'}(a_{t'}|s_{t'}) }{\pi_{\theta}(a_{t'}|s_{t'})}\right)    \left(  \sum_{t'=t}^Tr(s_{t'},a_{t'})\left(  \prod_{t'' = t}^{t'}\frac{\pi_{\theta'}(a_{t''}|s_{t''}) }{\pi_{\theta}(a_{t''}|s_{t''})} \right)    \right)\right]
+    &=\mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[  \sum_{t=1}^T\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t) \left(\prod_{t'=1}^t \frac{\pi_{\theta'}(a_{t'}|s_{t'}) }{\pi_{\theta}(a_{t'}|s_{t'})}\right)    \left(  \sum_{t'=t}^Tr(s_{t'},a_{t'})\left(  \prod_{t'' = t}^{t'}\frac{\pi_{\theta'}(a_{t''}|s_{t''}) }{\pi_{\theta}(a_{t''}|s_{t''})} \right)    \right)\right]
 \end{align*}
 Here we used the fact of causality that future actions don't affect the current weight. Also note that the last ratio of products can be deleted, and we essentially get the policy iteration algorithm, which we will discuss in later chapters. 
 
 So when we delete the last weight, we end up having
-$$\nabla_{\theta'}J(\theta')= \mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[   \sum_{t=1}^T\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t)    \left(\prod_{t'=1}^T \frac{\pi_{\theta'}(a_{t'}|s_{t'}) }{\pi_{\theta}(a_{t'}|s_{t'})}\right)\left(  \sum_{t'=t}^Tr(s_{t'},a_{t'})\right)\right]$$
+$$\nabla_{\theta'}J(\theta')= \mathbb{E}_{\tau\sim\pi_\theta(\tau)}\left[   \sum_{t=1}^T\nabla_{\theta'}\log\pi_{\theta'}(a_t|s_t)    \left(\prod_{t'=1}^t \frac{\pi_{\theta'}(a_{t'}|s_{t'}) }{\pi_{\theta}(a_{t'}|s_{t'})}\right)\left(  \sum_{t'=t}^Tr(s_{t'},a_{t'})\right)\right]$$
 The product of ratio is again exponential in $T$, so we may have high variance. 
 
 Recall on-policy policy gradient:
@@ -172,3 +172,47 @@ Similarly in off-policy policy gradient:
     &= \frac{1}{N} \sum_{i=1}^T \sum_{t=1}^T \frac{\pi_{\theta'}(s_{i,t})}{\pi_{\theta}(s_{i,t})}\frac{\pi_{\theta'}(s_{i,t}|a_{i,t})}{\pi_{\theta}(s_{i,t}|a_{i,t})}\nabla_{\theta'} \log \pi_{\theta'}(a_{i,t}|s_{i,t})\hat{Q}_{i,t}
 \end{align*}
 In later chapters, we can see that we can pretty much ignore the first states priors ratio.
+
+\subsection{Advanced Policy Gradients}
+Recall the policy gradients update rule:
+\[
+\theta\leftarrow\theta + \alpha\nabla_\theta J(\theta)
+\]
+In many cases, some parameters have more impact on the outcome than others. Therefore, intuitively, we would like to set higher learning rate for parameters with less impact and lower learning rate for parameters with more impact. To do this, we leverage covariant/natural policy gradient. Let us look at at the constrained view of iterative gradient descent:
+\begin{equation}
+\begin{aligned}
+\theta'\leftarrow \argmaxA_{\theta'}(\theta'-\theta)^T \nabla_{\theta}J(\theta)\\
+\mathrm{s.t. }\;||\theta'-\theta||^2\leq\epsilon
+    \end{aligned}
+\end{equation}
+where this $\epsilon$ controls how far we should go. But this $\epsilon$ is defined in the parameters' space, which means that we do not have much control over individual parameters. To resolve this, we would like to \textbf{rescale} this constraint so that we can constrain the step size in terms of the policy space, thus giving us more control on individual parameters. For example, we can use:
+
+\begin{equation}
+\begin{aligned}
+\theta'\leftarrow \argmaxA_{\theta'}(\theta'-\theta)^T \nabla_{\theta}J(\theta)\\
+\mathrm{s.t. }\;D(\pi_{\theta'}-\pi_\theta)\leq\epsilon
+    \end{aligned}
+\end{equation}
+where $D(\cdot, \cdot)$ is a parameterization-independent divergence measure, which usually is the KL-divergence: $D_{KL}(\pi_{\theta'}-\pi_\theta) = \mathbb{E}_{\pi_{\theta'}}[\log\pi_\theta - \log\pi_{\theta'}]$.
+
+We can also estimate the KL divergence locally using second-order Taylor expansion by:
+\[
+D_{KL}(\pi_{\theta'}-\pi_\theta)\approx(\theta'-\theta)^TF(\theta'-\theta)
+\]
+where $F$ is the Fisher-information matrix defined as:
+\[
+F = \mathbb{E}_{\pi_{\theta'}}[\nabla_\theta\log\pi_\theta(a|s)\nabla_\theta\log\pi_\theta(a|s)^T]
+\]
+
+Thus, with $F$, the rescaled constraint optimization problem can be equivalently rewritten as:
+\begin{equation}
+\begin{aligned}
+\theta'\leftarrow \argmaxA_{\theta'}(\theta'-\theta)^T \nabla_{\theta}J(\theta)\\
+\mathrm{s.t. }\;||\theta'-\theta||^2_F\leq\epsilon
+    \end{aligned}
+\end{equation}
+
+Using Lagrangian, one could solve this optimization problem iteeratively as follows:
+\[\theta \leftarrow \theta + \alpha F^{-1}\nabla_\theta J(\theta)
+\]
+This is the basic idea behind TRPO (PPO).
