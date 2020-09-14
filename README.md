@@ -6,3 +6,4 @@
 * Aug 26, 2020: Started adding Fall 2020 materials
 * Aug 28, 2020: Fixed typos in Intro. Credit: Warren Deng.
 * Aug 30, 2020: Added more explanation to the imitation learning chapter.
+* Sep 13, 2020: Added advanced PG in PG and fixed typos in PG.
