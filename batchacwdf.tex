@@ -9,7 +9,7 @@
     \STATE Fit $\hat{V}_\phi(s)$ to sampled reward sums
     \STATE Evaluate $\hat{A}^\pi(s_i,a_i) = r(s_i,a_i)+\gamma\hat{V}_\phi(s'_i)-\hat{V}_\phi(s_i)$
     \STATE $\nabla_\theta J(\theta) \simeq \sum_i\nabla_\theta\log \pi_\theta(a_i|s_i)\hat{A}^\pi(s_i,a_i)$
-    \STATE Improve policy by $theta \leftarrow \theta + \alpha\nabla_\theta J(\theta)$
+    \STATE Improve policy by $\theta \leftarrow \theta + \alpha\nabla_\theta J(\theta)$
 \ENDWHILE
 \RETURN optimal policy from gradient ascent as $\pi^{return}$
 \end{algorithmic}

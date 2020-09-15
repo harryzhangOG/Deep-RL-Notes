@@ -9,7 +9,7 @@
     \STATE Update $\hat{V}^\pi_\phi$ using target $r+\gamma\hat{V}^\pi_\phi(s')$
     \STATE Evaluate $\hat{A}^\pi(s,a)=r(s,a)+\gamma\hat{V}^\pi_\phi(s')-\hat{V}^\pi_\phi(s)$
     \STATE $\nabla_\theta J(\theta) \simeq \sum_i\nabla_\theta\log \pi_\theta(a|s)\hat{A}^\pi(s,a)$
-    \STATE Improve policy by $theta \leftarrow \theta + \alpha\nabla_\theta J(\theta)$
+    \STATE Improve policy by $\theta \leftarrow \theta + \alpha\nabla_\theta J(\theta)$
 \ENDWHILE
 \RETURN optimal policy from gradient ascent as $\pi^{return}$
 \end{algorithmic}
