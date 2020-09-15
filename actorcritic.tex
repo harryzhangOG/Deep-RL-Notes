@@ -1,6 +1,6 @@
 \chapter{Actor-Critic Algorithms}
 Recall from last chapter, we derived the policy gradient theorem:
-$$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t'=1}^T r(s_{i,t'},a_{i,t'})\right)$$
+$$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t'=t}^T r(s_{i,t'},a_{i,t'})\right)$$
 where we defined the summed reward as the ``reward-to-go'' function $\hat{Q}_{i,t}$, and it represents the estimate of expected reward if we take action $a_{i,t}$ in state $s_{i,t}$. We have shown that this estimate has very high variance, and we shall see how we can improve policy gradients from using better estimation of the reward-to-go function.
 
 \section{Reward-to-Go}
@@ -68,7 +68,7 @@ Here is a question, if our original objective is to use $V^\pi$ to reduce the va
 To fit our value function, we could use a supervised learning approach. Essentially, we can use our single sample estimation of the value function as our function value, and fit a function that maps the states to the value function values. Therefore, our training data will be $\left\{(s_{i,t}, \sum_{t'=t}^Tr(s_{i,t'},a_{i,t'}))\right\}$, and we denote the function value labels as $y_{i,t}$, and we define a typical supervised regression loss function which we try to minimize as $\mathcal{L}(\phi) = \frac{1}{2}\sum_i\lvert|\hat{V}_\phi^\pi(s_i)-y_i|\rvert^2$. 
 
 \subsection{Improving the Estimate Using Bootstrap}
-In fact, we can improve our training process because the original applied target $y_{i,t}$ is not perfect. We could use a technique called bootstrapping. Recall the definition of our ideal target in the supervised regression:
+In fact, we can improve our training process because the original applied target $y_{i,t}$ is not perfect. We could use a technique called \textbf{bootstrapping}. Recall the definition of our ideal target in the supervised regression:
 $$\begin{aligned}
     y_{i,t} &= \sum_{t'=t}^T\mathbb{E}_{\pi_\theta}\left[r(s_{t'},a_{t'})|s_{i,t}\right]\\
     & \simeq r(s_{i,t},a_{i,t})+\sum_{t'=t+1}^T\left[r(s_{t'},a_{t'})|s_{i,t+1}\right]\\
@@ -76,16 +76,16 @@ $$\begin{aligned}
 \end{aligned}$$
 , compared with our Monte Carlo targets: $y_{i,t} = \sum_{t'=t}^T r(s_{i,t'},a_{i,t'})$.
 
-Bootstrapping means applying our previous estimation on our current estimation. In our ideal targets, the last estimation is accurate if we knew the actual $V^\pi$. But if the actual is not known, we can just apply bootstrapping by using the current fit estimate $\hat{V}^\pi_\phi$ to estimate the next state's value: $\hat{V}^\pi_\phi(s_{i,t+1})$. Such an estimate is biased, but it has low variance.
+Bootstrapping means applying our previous estimation on our current estimation. In our ideal targets, the last estimation is accurate if we knew the actual $V^\pi$. But if the actual value function is not known, we can just apply bootstrapping by using the current fit estimate $\hat{V}^\pi_\phi$ to estimate the next state's value: $\hat{V}^\pi_\phi(s_{i,t+1})$. Such an estimate is biased, but it has low variance.
 
-Consequently, our training data using bootstrapping becomes: $\left\{(s_{i,t}, r(s_{i,t},a_{i,t}) +\hat{V}^\pi_\phi(s_{i,t+1})) \right\}$. Such bootstrapped targets work well with highly stochastic environments. 
+Consequently, our training data using bootstrapping becomes: \[\left\{(s_{i,t}, r(s_{i,t},a_{i,t}) +\hat{V}^\pi_\phi(s_{i,t+1})) \right\}\]. Such bootstrapped targets work well with highly stochastic environments. 
 
 \section{Batch Actor-Critic Algorithm}
-Now we are ready to devise our first actor-critic algorithm. The reason why we call it actor-critic is that we use a critic (value function) to decrease the high variance of the actor (Q-function). The full algorithm is shown in Alg. \ref{alg:batchac} and we call it a batch algorithm because it is not online. We shall see the online version later.
+Now we are ready to devise our first actor-critic algorithm. The reason why we call it actor-critic is that we use a critic (value function) to decrease the high variance of the actor (Q-function/policy). The full algorithm is shown in Alg. \ref{alg:batchac} and we call it a batch algorithm because it is not online. We shall see the online version later.
 \input{batchac.tex}
 In Algorithm \ref{alg:batchac}, the way how we fit $\hat{V}_\phi$ is by minimizing the supervised regression norm $\mathcal{L}(\phi) = \frac{1}{2}\sum_i\lvert|\hat{V}_\phi^\pi(s_i)-y_i|\rvert^2$.
 \section{Aside: Discount Factors}
-Imagine if we had an infinite horizon environment ($T\rightarrow\infty$, then our estimated value function $\hat{V}^\pi_\phi(s)$ can get infinitely large in many cases. Therefore, one possible way to address this issue is to say that it is better to get rewards sooner than later. Therefore, instead of labeling our values as $y_{i,t} \simeq r(s_{i,t}, a_{i,t}) + \hat{V}^\pi_\phi(s_{i,t+1})$, we can shrink the value function value as we progress to the next time step. To achieve this, we introduce a hyperparameter called a \textbf{discount factor}, denoted as $\gamma$, where $\gamma \in [0,1]$:
+Imagine if we had an infinite horizon environment ($T\rightarrow\infty$), then our estimated value function $\hat{V}^\pi_\phi(s)$ can get infinitely large in many cases. Therefore, one possible way to address this issue is to say that it is better to get rewards sooner than later. Therefore, instead of labeling our values as $y_{i,t} \simeq r(s_{i,t}, a_{i,t}) + \hat{V}^\pi_\phi(s_{i,t+1})$, we can shrink the value function value as we progress to the next time step. To achieve this, we introduce a hyperparameter called a \textbf{discount factor}, denoted as $\gamma$, where $\gamma \in [0,1]$:
 $$y_{i,t} \simeq r(s_{i,t}, a_{i,t}) + \gamma\cdot\hat{V}^\pi_\phi(s_{i,t+1})$$
 in most cases, $\gamma = 0.99$ works well.
 
@@ -106,9 +106,11 @@ Now we can incorporate the discount factor with our actor-critic algorithm in Al
 \input{batchacwdf.tex}
 
 \section{Online Actor-Critic Algorithm}
-Now that we have seen actor-critic algorithms with a batch of samples, we can further improve the performance by making it fully online. Namely, we are taking the gradient step based on the current sample so that we are not storing any large number of samples, which is more efficient. In the online version of actor-critic, we essentially use two neural nets: one for the policy, the other one for the value function. This is simple and stable, but as the states dimension becomes higher, we are not giving any shared features between the actor and the critic. Therefore, we can also make the network shared between the policy and the value function. In each step, we can only take one sample and gradually improve our value function using that sample. Here is the sketch of the online version of actor-critic algorithm in Algorithm \ref{alg:onlineac}. 
+Now that we have seen actor-critic algorithms with a batch of samples, we can further improve the performance by making it fully online. Namely, we are taking the gradient step based on the current sample so that we are not storing any large number of samples, which is more efficient. In the online version of actor-critic, we essentially use two neural nets: one for the policy, the other one for the value function. This is simple and stable, but as the states dimension becomes higher, we are not giving any shared features between the actor and the critic. Therefore, we can also make the network shared between the policy and the value function. For example, in image-based observations scenarios, we could share the conv layers' weights for the two networks and only differ the two in the final fully connected layers.
+
+In each step, we can only take one sample and gradually improve our value function using that sample. Here is the sketch of the online version of actor-critic algorithm in Algorithm \ref{alg:onlineac}. 
 \input{onlineac.tex}
-Note that in steps 3-5, we are only taking a gradient step from one sample. In reality, this works best if we use a batch of samples instead of just one, and one can use parallel workers (simulations) either synchronously or asynchronously to achieve it, as illustrated in Fig \ref{fig:parallelsim}.
+Note that in steps 3-5, we are only taking a gradient step from one sample. In reality, this works best if we use a batch of samples instead of just one, and one can use parallel workers (simulations) either synchronously or asynchronously to achieve it, as illustrated in Fig \ref{fig:parallelsim}. 
 \begin{figure}
     \centering
     \includegraphics[scale=0.5]{figures/parallelsim.png}
@@ -116,8 +118,10 @@ Note that in steps 3-5, we are only taking a gradient step from one sample. In r
     \label{fig:parallelsim}
 \end{figure}
 
+One caveat about the asynchronous version is that as the parameter server gets updated, the data collection policy might not be updated, which means the newly collected data might not come from the latest policy, thus making the current acting policy slightly outdated. Such problem is less of an issue in practice because the policy only gets updated by a tiny bit every time.
+
 \section{Critics as State-Dependent Baselines}
-Now let us further discuss about the connection between a baseline and a critic. Recall in the Monte Carlo version of policy gradient, the gradient is defined as:
+Now let us further discuss the connection between a baseline and a critic. Recall in the Monte Carlo version of policy gradient, the gradient is defined as:
 $$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t'=1}^T r(s_{i,t'},a_{i,t'}) - b\right)$$
 and in actor-critic algorithm, we estimate the gradient by estimating the advantage function:
 $$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(r(s_{i,t},a_{i,t}) + \gamma\hat{V}_\phi^\pi(s_{i,t+1})-\hat{V}_\phi^\pi(s_{i,t})\right)$$
@@ -125,7 +129,7 @@ $$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla
 So what are the pros and cons of the two approaches? In policy gradient with baselines, we have shown that there is no bias in our estimation, but there might be high variance due to our single-sample estimation of the cost-to-go function. On the other hand, in the actor-critic algorithm, we have shown that we have lower variance due to the critic, but we end up having a biased estimation because of the possibly bad critic as we are bootstrapping. So can we somehow keep the estimator unbiased while lowering the variance with the critic $\hat{V}^\pi_\phi$?
 
 The solution is obvious and straightforward, we can just use $\hat{V}^\pi_\phi$ in place of $b$:
-$$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t'=1}^T r(s_{i,t'},a_{i,t'}) - \hat{V}^\pi_\phi(s_{i,t}))\right)$$
+$$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t'=1}^T r(s_{i,t'},a_{i,t'}) - \hat{V}^\pi_\phi(s_{i,t})\right)$$
 In this way, we obtain an unbiased estimator with lower variance. 
 
 \section{Eligibility Traces and n-Step Returns}
