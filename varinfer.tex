@@ -39,7 +39,7 @@ If we maximize $\log p(x_i|z)$, we will maximize $\log p(x_i)$. Also, intuitivel
 
 Let us take a closer look at this lower bound. Define $\mathbb{E}_{z\sim q_i(z)}\left[\log p(x_i|z)+\log p(z)\right] + \mathcal{H}(q_i)$ as $\mathcal{L}_i(p,q_i)$. In tuitively, this term measures the likelihood. For a $q_i(z)$ to approximate $p(z|x_i)$ well, we need to minimize the KL-divergence between the two distributions. By definition, the KL divergence of the two distributions is written as:
 \begin{align*}
-    D_{KL}(q_i(x_i)||p(z|x_i))&=\mathbb{E}_{z\sim q_i(z)}\left[\log \frac{q_i(z)}{p(z|x_i)}\right]\\
+    D_{KL}(q_i(z)||p(z|x_i))&=\mathbb{E}_{z\sim q_i(z)}\left[\log \frac{q_i(z)}{p(z|x_i)}\right]\\
     &=\mathbb{E}_{z\sim q_i(z)}\left[\log \frac{q_i(z)p(x_i)}{p(x_i,z)}\right]\\
     &= -\mathbb{E}_{z\sim q_i(z)}\left[\log p(x_i|z)+\log p(z)\right] + \mathbb{E}_{z\sim q_i(z)}\left[\log q_i(z)\right]+ \mathbb{E}_{z\sim q_i(z)}\left[\log p(x_i)\right]\\
     &= -\mathbb{E}_{z\sim q_i(z)}\left[\log p(x_i|z)+\log p(z)\right] -\mathcal{H}(q_i)+\log p(x_i)\\

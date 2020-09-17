@@ -5,7 +5,7 @@ where we defined the summed reward as the ``reward-to-go'' function $\hat{Q}_{i,
 
 \section{Reward-to-Go}
 Let us take a closer look at the reward-to-go. To improve the estimation, one way is to get closer to the precise value of the reward-to-go. We can define the reward-to-go using expectation:
-$$Q(s_t,a_t) = \sum_{t'=t}^T \mathbb{E}_{\pi_\theta}\left[r(s_{t'},a_{t'})|s_t,a_t\right]$$
+$$Q(s_t,a_t) = \sum_{t'=t}^T \mathbb{E}_{p(\theta)}\left[r(s_{t'},a_{t'})|s_t,a_t\right]$$
 this is the \textbf{true, expected} value of the reward-to-go.
 
 Therefore, one could imagine using this true expected value, combined with our original Monte Carlo approximation to yield a better estimate:
