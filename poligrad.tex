@@ -70,7 +70,7 @@ This problem shows the high variance in our naive policy gradient algorithm. The
 \section{Reducing Policy Gradients Variance using Baselines}
 \subsection{Causality}
 One simple fix for high variance is to use the fact of causality: policy at time $t'$ cannot affect reward at $t$ if $t<t'$. This simple, commonsensical idea allows us to discard some operands in the summation:
-$$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\left(\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\right)\left(\sum_{t'=t}^T r(s_{i,t'},a_{i,t'})\right)$$
+$$\nabla_\theta J(\theta) \simeq \frac{1}{N}\sum_{i=1}^N\sum_{t=1}^T\nabla_\theta \log\pi_\theta(a_{i,t}|s_{i,t})\left(\sum_{t'=t}^T r(s_{i,t'},a_{i,t'})\right)$$
 and we define the second item in the summation as the ``reward-to-go''. Notice that in the reward-to-go term, we start the summation from time $t$ instead of 1, by causality. The idea is that we are multiplying the likelihood by smaller numbers due to the reduction of the summation term, so we can reduce the variance to some extent.
 \subsection{Baselines}
 Another common approach is to use baselines. By baselines, we mean that instead of making all high-reward trajectories more likely, we only make trajectories \textbf{better than average} more likely. So naturally, we define a baseline $b$ as the average reward:
