@@ -32,7 +32,7 @@ $$V^\pi(s)\leftarrow r(s,\pi(s)) + \gamma\mathbb{E}_{s'\sim p(s'|s,a)}\left[V^\p
 \input{policyiter1.tex}
 This version of policy iteration is sketched in Algorithm \ref{alg:policyiter1}
 
-We can even further simplify the dynamic programming update. Note that we in each iteration, we are updating the policy first in order to update the value function. Thus, it would be faster if we could skip the policy part and directly improve the value estimation. Meanwhile, the $\argmaxA$ operation that we apply on the advantage function itself is an implicit policy. We also know that $\argmaxA_{a_t}A^\pi(s,a) = \argmaxA_{a_t}Q^\pi(s,a)$, because the two values only differ by the subtraction term $V^\pi$, which does not depend on action:
+We can even further simplify the dynamic programming update. Note that in each iteration, we are updating the policy first in order to update the value function. Thus, it would be faster if we could skip the policy part and directly improve the value estimation. Meanwhile, the $\argmaxA$ operation that we apply on the advantage function itself is an implicit policy. We also know that $\argmaxA_{a_t}A^\pi(s,a) = \argmaxA_{a_t}Q^\pi(s,a)$, because the two values only differ by the subtraction term $V^\pi$, which does not depend on action:
 $$A^\pi(s,a) = r(s,a) + \gamma\mathbb{E}\left[V^\pi(s')\right]$$
 \input{policyiter2.tex}
 Having this, we can simplify the policy iteration algorithm further, as illustrated in Alg. \ref{alg:policyiter2}. As we skipped the policy update part, we call this new, simplified algorithm ``value iteration algorithm''.
@@ -41,7 +41,7 @@ Having this, we can simplify the policy iteration algorithm further, as illustra
 The policy iteration and value iteration algorithm we discussed above are heavily based on an impractical assumption: the total number of states is finite and small, because we are trying to construct a tabular expression of the value function and the Q function. Apparently, the tables are going to explode in dimensions if there are a lot of states. We call this the Curse of Dimensionality. To resolve this problem, we can use a neural network to approximate the functions instead of constructing a tabular expression of the function. 
 
 \subsection{Fitted Supervised Value Iteration Algorithm}
-Since we know that the value function is defined as $\max_a Q^\pi(s,a)$, we can use this definition as the labels for the value function in order to define a L2 loss function:
+Since we know that the value function is defined as $\max_a Q^\pi(s,a)$, we can use this definition as the labels for the value function in order to define an L2 loss function:
 $$\mathcal{L}(\phi) = \frac{1}{2}\lvert|V_\phi(s) - \max_{a}Q^\pi(s,a)|\rvert^2$$
 \input{fittedvaliter.tex}
 Then we can sketch out a simple fitted value iteration algorithm using this loss function in Algorithm \ref{alg:fittedvaliter}. Note that when setting the label, the ideal step to take is to enumerate all the states and find the corresponding label. However, when it is impractical, one could just use some samples and enumerate all the actions to find the labels. Moreover, when we take the maximum over all the actions from a state, we implicitly assume that the transition dynamics are known. Why? Because we want to take an action, record the value of that action, and then roll back to the previous state in order to check the values of other actions. Thus, without the transition dynamics, we cannot easily take the maximum.
@@ -69,7 +69,7 @@ $$\mathcal{B}V = \max_a r_a + \gamma\mathcal{T}_aV$$
 where $r_a$ is a stacked vector of rewards at all states for action $a$. $\mathcal{T}_a$ is a matrix of transitions for action $a$ such that $\mathcal{T}_{a,i,j} = p(s'=i|s=j, a)$.
 We also define a fixed point of the Bellman backup operator $\mathcal{B}$, denoted as $V^*$:
 $$V^*(s) = \max_a r(s,a) + \gamma\mathbb{E}[V^*(s')]$$
-so it is similar to the notion of the stationary distribution in MDP, $V^* = \mathcal{B}V^*$. One can prove that such fixed point always exists, and it corresponds to the optimal policy, but the online question is: will we reach it?
+so it is similar to the notion of the stationary distribution in MDP, $V^* = \mathcal{B}V^*$. One can prove that such fixed point always exists, and it corresponds to the optimal policy, but the question is: will we reach it?
 
 In the \textbf{tabular representation} case, we can prove that value iteration always reaches the fixed point $V^*$ because mathematically, the Bellman backup operator is a \textbf{contraction}. A contraction in our scenario is defined as follows: for any $V$ and $\Bar{V}$, we have $\lvert|\mathcal{B}V - \mathcal{B}\Bar{V}|\rvert_\infty \leq \lvert|V -\Bar{V}|\rvert_\infty$. In other words, after applying the Bellman backup operator, the gap always gets smaller by $\gamma$ with respect to the l-$\infty$ norm.
 
