@@ -10,3 +10,4 @@
 * Sep 14, 2020: AC chapter format, typos fix, more analysis on A2C
 * Sep 16, 2020: Chapter 10.1 KL div typo fix. Credit: Cong Wang.
 * Sep 19, 2020: Chapter 3.7.1 parathesis typo fix. Credit: Yunkai Zhang.
+* Sep 23, 2020: Q learning chapter fix
