@@ -24,7 +24,7 @@ To solve the wrong gradient problem, we are essentially trying to solve the prob
 \input{qwrb_tn.tex}
 Here we are frequently sampling batches from $\mathcal{B}$ and taking the gradient steps. We are less frequently updating the replay buffer as discussed in Alg. \ref{alg:QwRB}. We are even less frequently updating the network parameters, since we said one good choice for parameter $\phi'$ is to use $\phi$ 1000 steps ago.
 
-Using target networks and replay buffers, we can sketch out a classic deep Q-learning algorithm (DQN), proposed by Minh et al. in \cite{mnih2013playing}. The pseudocode is in \ref{alg:dqn}. Here we choose $N$ to be a large number because our intention is to infrequently update the parameters. To further optimize the algorithm, it might feel weird abruptly update $\phi'$ after $N$ steps. Therefore, to alleviate this ``abruptness'', we can use \textbf{Polyak Averaging}: in step 6 of Alg. \ref{alg:dqn}, instead of copying $\phi$ every $N$ steps, we do $\phi' \leftarrow \tau\phi' + (1-\tau)\phi$. We also call such update a damped update.
+Using target networks and replay buffers, we can sketch out a classic deep Q-learning algorithm (DQN), proposed by Minh et al. in \cite{mnih2013playing}. The pseudocode is in \ref{alg:dqn}. Here we choose $N$ to be a large number because our intention is to infrequently update the parameters. To further optimize the algorithm, it might feel weird to abruptly update $\phi'$ after $N$ steps. Therefore, to alleviate this ``abruptness'', we can use \textbf{Polyak Averaging}: in step 6 of Alg. \ref{alg:dqn}, instead of copying $\phi$ every $N$ steps, we do $\phi' \leftarrow \tau\phi' + (1-\tau)\phi$. We also call such update a damped update.
 \input{dqn.tex}
 
 Now let us view the three different Q-learning algorithms in a more general way. As shown in Fig. \ref{fig:dqn}, there are three different steps in the algorithm. The first step is to collect data, the second step is to update the target in the target network, and the third step is to regress onto the Q-function. In the simplest, regression-based fitted Q-learning algorithm, process 3 is in the inner loop of process 2, which is in the inner loop of process 1. In online Q-learning, we evict the old transitions immediately, and process 1, 2, and 3 run at the same speed. In DQN, process 1 and 3 run at the same speed, but process 2 runs slower.
@@ -67,9 +67,9 @@ One option is to use various optimization techniques, as one may have seen in UC
 Option no. 2 is to use function classes that are easy to maximize. For example, one could use the Normalized Advantage Functions (NAF) proposed by Gu et al. in \cite{gu2016continuous}.
 
 Another rather fancier option is to learn an approximate optimizer, which was originally proposed by Lillicrap et al. in \cite{lillicrap2015continuous}. The idea of Deep Deterministic Policy Gradient (which is actually a Q-learning in disguise) is to train another network $\mu_\theta(s)$ such that $\mu_\theta(s) \simeq \argmaxA_a Q_\phi(s,a)$. To train the network, one can see that the optimization of Q-function with respect to $\theta$ can be solved by $\theta \leftarrow \argmaxA_\theta Q_\phi(s,\mu_\theta(s))$ because by chain rule, $\frac{dQ_\phi}{d\theta} = \frac{da}{d\theta}\frac{dQ_\theta}{da}$. Then the new target becomes:
-$$y_j = r_j + \muQ_{\phi'}(s'_j,\mu_\theta(s'_j))\simeq r_j + \muQ_{\phi'}(s'_j, \argmaxA_{a'}Q_{\phi'}(s'_j,a'_j))$$
+$$y_j = r_j + \gamma Q_{\phi'}(s'_j,\mu_\theta(s'_j))\simeq r_j + \gamma Q_{\phi'}(s'_j, \argmaxA_{a'}Q_{\phi'}(s'_j,a'_j))$$
 
-The sketch of DDPG is in Alg. \ref{alg:ddpg}. In step 5, we are updating the Q-function, and in step 6, we are updating the argmax-er. Therefore, DDPG is essentially DQN with argmax-er.
+The sketch of DDPG is in Alg. \ref{alg:ddpg}. In step 5, we are updating the Q-function, and in step 6, we are updating the argmax-er. Therefore, DDPG is essentially DQN with a learned argmax-er.
 \input{ddpg.tex}
 
 
