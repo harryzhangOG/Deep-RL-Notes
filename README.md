@@ -11,3 +11,4 @@
 * Sep 16, 2020: Chapter 10.1 KL div typo fix. Credit: Cong Wang.
 * Sep 19, 2020: Chapter 3.7.1 parathesis typo fix. Credit: Yunkai Zhang.
 * Sep 23, 2020: Q learning chapter fix
+* Sep 26, 2020: More explanation and fix to the advanced PG chapter (specifically intuition behind TRPO).
