@@ -6,10 +6,10 @@
 \FOR{$t = T$ to 1}
     \STATE $Q_t = C_t + F_t^TV_{t+1}F_t$
     \STATE $q_{t} = c_{t} +  F^T_{t}V_Tf_{t} + F^T_{t}v_{t+1}$
-    \STATE $Q(x_{t}, u_{t}) = \text{const} +\frac{1}{2} \begin{bmatrix}x_{t}\\u_{t}\end{bmatrix}Q_{t}\begin{bmatrix}x_{t}\\u_{t}\end{bmatrix} + \begin{bmatrix}x_{t}\\u_{t}\end{bmatrix}^Tq_{t}$
+    \STATE $Q(x_{t}, u_{t}) = \text{const} +\frac{1}{2} \begin{bmatrix}x_{t}\\u_{t}\end{bmatrix}^TQ_{t}\begin{bmatrix}x_{t}\\u_{t}\end{bmatrix} + \begin{bmatrix}x_{t}\\u_{t}\end{bmatrix}^Tq_{t}$
     \STATE $u_t\leftarrow \argminA_{u_t}Q(x_t,u_t) = K_tx_t + k_t$
-    \STATE $K_{t} &= -Q^{-1}_{u_{t},u_{t}}Q_{u_{t},x_{t}}$
-    \STATE $k_{t} &= -Q_{u_{t},u_{t}}q_{u_{t}}$
+    \STATE $K_{t} = -Q^{-1}_{u_{t},u_{t}}Q_{u_{t},x_{t}}$
+    \STATE $k_{t} = -Q_{u_{t},u_{t}}q_{u_{t}}$
     \STATE $V_t = Q_{x_t,x_t} + Q_{x_t,u_t}K_t + K^T_tQ_{u_t,x_t} + K_t^TQ_{u_t,u_t}K_t$
     \STATE $v_t = q_{x_t} + Q_{x_t,u_t}k_t + K_t^TQ_{u_t} + K^T_tQ_{u_t,u_t}k_t$
     \STATE $V(x_t) = \text{const} + \frac{1}{2}x_t^TV_tx_t + x_t^Tv_t$
