@@ -39,7 +39,7 @@ This is not a good bound, but it is a bound.
 
 Now let's focus on the more general case, that $\pi_\theta$ is an arbitrary distribution. Then we can try to quantify the notion of ``close'' by saying $\pi_\theta$ is close to $\pi_{\theta'}$ if:
 $$|\pi_{\theta'}(a_t|s_t) - \pi_\theta(a_t|s_t)| \leq \epsilon \; \forall s_t$$
-Here is a useful lemma that we will use later: if $|p_X(x) - p_Y(y)| = \epsilon$, then there exists a joint distribution of $x,y$, which we call $p(x,y)$ such that $p(x) = p_X(x)$ and $p(y) = p_Y(y)$ and $p(x=y) = 1-\epsilon$. Equivalently, this means that under these circumstances, $p_X(x)$ agrees with $p_Y(y)$ with probability $\epsilon$. If we plug in our $\pi_\theta$ and $\pi_{\theta'}$, then we can show that $\pi_{\theta'}(a_t|s_t)$ takes a different action than $\pi_\theta(a_t|s_t)$ with probability less than $\epsilon$. Using this lemma, we have the same bound as in the deterministic case:
+Here is a useful lemma that we will use later: if $|p_X(x) - p_Y(y)| = \epsilon$, then there exists a joint distribution of $x,y$, which we call $p(x,y)$ such that $p(x) = p_X(x)$ and $p(y) = p_Y(y)$ and $p(x=y) = 1-\epsilon$. Equivalently, this means that under these circumstances, $p_X(x)$ disagrees with $p_Y(y)$ with probability $\epsilon$. If we plug in our $\pi_\theta$ and $\pi_{\theta'}$, then we can show that $\pi_{\theta'}(a_t|s_t)$ takes a different action than $\pi_\theta(a_t|s_t)$ with probability less than $\epsilon$. Using this lemma, we have the same bound as in the deterministic case:
 \begin{align*}
   |p_{\theta'}(s_t) - p_\theta(s_t)| &= (1-(1-\epsilon)^t)|p_{mistake}(s_t) - p_\theta(s_t)|\\
   &\leq 2(1-(1-\epsilon)^t)\\

@@ -9,10 +9,10 @@ The transition probabilities $p(s_{t+1}|s_t,a_t)$ is not known in all the model-
 \section{Optimal Control}
 Optimal control is a task that we come across when we are well aware of the transition probabilities and we try to learn how to control the system optimally. In optimal control, there are two different categories of controller design: the first one is \textbf{open-loop} control, where we do not have any state feedbacks, and we roll out a sequence of actions based on the current state that we observe. The second one is called \textbf{closed-loop} control, where we determine the action at each time step based on the current state, and how we determine the action to apply is based on state feedbacks. In some cases, our transition functions are deterministic, while in others, the transition functions are stochastic.
 
-In a open loop controller, if we have a deterministic transition in our system such that $a_{t+1} = f(s_t,a_t)$, then our action sequence should be determined by choosing those that can return the maximum rewards:
+In a open loop controller, if we have a deterministic transition in our system such that $s_{t+1} = f(s_t,a_t)$, then our action sequence should be determined by choosing those that can return the maximum rewards:
 \begin{align*}
     a_1, ..., a_T&=\argmaxA_{a1...a_T}\sum_{t=1}^Tr(s_t,a_t)\\
-    \mathrm{s.t. }\;a_{t+1} &= f(s_t,a_t)
+    \mathrm{s.t. }\;s_{t+1} &= f(s_t,a_t)
 \end{align*}
 In stochastic scenarios, the transition function is a probabilistic distribution, where we have $p(s_{t+1}|s_t,a_t)$, and the action sequence should be chosen based on expectation of the rewards:
 \begin{align*}
@@ -33,10 +33,12 @@ For now, let us focus on a simple, open-loop controller, and see how we choose a
 $a_1,...,a_T = \argmaxA_{a_1,...,a_T}J(a_1,...,a_T)$
 and compactly, we can say that $A = \argmaxA_A J(A)$.
 \subsection{Random Shooting}
-Perhaps the easiest and most intuitive stochastic optimization method in open-loop control is the random shooting method. In such method, we first sample some different action sequences $A_1,...,A_N$ from some known distribution (such as uniform), and then we choose $A_i$ based on $\argmaxA_i J(A_i)$. This is highly efficient in that we are not improving what we sample, so we might get stuck in some mediocre action sequence. Therefore, we can keep improving the samples we choose from a Gaussian distribution based on some elites sequences. This is the basic idea of Cross Entropy Method (CEM).
+Perhaps the easiest and most intuitive stochastic optimization method in open-loop control is the random shooting method. In such method, we first sample some different action sequences $A_1,...,A_N$ from some known distribution (such as uniform), and then we choose $A_i$ based on $\argmaxA_i J(A_i)$. This is highly inefficient in that we are not improving what we sample, so we might get stuck in some mediocre action sequence. Therefore, we can keep improving the samples we choose from a Gaussian distribution based on some elites sequences. This is the basic idea of Cross Entropy Method (CEM).
 
 \subsection{Cross Entropy Method}
-CEM improves upon the random shooting's guess and check scheme by choosing some elites sequences which give us higher rewards and refit the distribution to the high rewards. Intuitively, we are getting closer to higher rewards as we refit the distribution. Here is a sketch of CEM, as shown in Alg. \ref{alg:cem}.
+CEM improves upon the random shooting's guess and check scheme by choosing some elites sequences which give us higher rewards and refit the distribution to the high rewards. Intuitively, we are getting closer to higher rewards as we refit the distribution. Here is a sketch of CEM, as shown in Alg. \ref{alg:cem}. Usually there are two different criteria for CEM termination. The first one is simply just upper bound the maximum number of iterations. The second one is more subtle. For example, if we model the distribution as normal, we wish to stop if the distribution becomes ``narrow'' enough eventually, and we can say that we stop CEM when the fit standard deviation is below some threshold value. 
+
+When we ``fit'' a distribution, what we are actually doing is to iteratively search for the best parameters to find a distribution from which we can sample to give us the best cost-to-go value. In a normal distribution, we are just learning $\mu$ and $\sigma$.
 \input{cem.tex}
 This algorithm is extremely simple and very fast if parallelized. However, it suffers from very harsh dimensionality limit and it only works for open-loop scenarios. 
 \subsection{Monte Carlo Tree Search}
@@ -45,7 +47,8 @@ Now imagine our action space is discrete, we can apply a stochastic optimization
 Note that we the tree policy is not an actual policy, because it is just a method to traverse through our tree in order to select a node to expand. The default policy is an actual policy that is able to simulate the system. Since simulations are involved here, we have to be able to roll back to the original state.
 \subsection{UCT Tree Policy}
 
-In MCTS, how do we choose the nodes to expand? Intuitively, we need to keep choosing the nodes with high rewards so far, and simultaneously pick the ones that have not been chosen in order to explore. Therefore, one way to do it is to use the UCT tree policy. In this policy, we gauge the performance of each node by assigning a score function where Score$(s_t) = \frac{Q(s_t)}{N(s_t)}+2C\sqrt{\frac{2\ln{N(s_{t-1})}}{N(s_t)}}$. If the current node $s_t$ is not fully expanded, meaning that there is action that we never took before, then we choose new $a_t$; else, we choose the child with best Score($s_{t+1}$).
+In MCTS, how do we choose the nodes to expand? Intuitively, we need to keep choosing the nodes with high rewards so far, and simultaneously pick the ones that have not been chosen in order to explore. Therefore, one way to do it is to use the UCT tree policy. In this policy, we gauge the performance of each node by assigning a score function where the score
+\[S(s_t) = \frac{Q(s_t)}{N(s_t)}+2C\sqrt{\frac{2\ln{N(s_{t-1})}}{N(s_t)}}\]. If the current node $s_t$ is not fully expanded, meaning that there is action that we never took before, then we choose new $a_t$; else, we choose the child with best $S(s_{t+1})$.
 
 More details about MCTS can be found in \cite{browne2012survey} and \cite{guo2014deep}.
 
@@ -76,7 +79,7 @@ c(x_t,u_t) = \frac{1}{2}\begin{bmatrix}x_t\\u_t\end{bmatrix}^TC_t\begin{bmatrix}
 What we are doing right now is to solve for a closed-form solution for an optimal LQR controller. The idea is to use backward recursion. Since we are doing shooting method, we have $$\min_{u_1,...,u_T}c(x_1,u_1) + c(f(x_1,u_1),u_2)+...+c(f(f(...)...),u_T)$$
 and the last item is the only term that depends on $u_T$. Therefore, as a base case, we can try to solve for $u_T$ first. In order to simplify our computation, let us define some blocks in the matrices that we defined above. Specifically, let us assume that
 \[
-C_T = \begin{bmatrix} C_{x_T,x_T}& C_{x_T,u_T}\\C_{u_t,x_T}&C_{u_T,u_T}\end{bmatrix}
+C_T = \begin{bmatrix} C_{x_T,x_T}& C_{x_T,u_T}\\C_{u_T,x_T}&C_{u_T,u_T}\end{bmatrix}
 \]
 and
 \[
@@ -89,11 +92,11 @@ Q(x_T,u_T) = \mathrm{const} + \frac{1}{2}\begin{bmatrix}x_T\\u_T\end{bmatrix}^TC
 \]
 by setting gradient to 0, we will have 
 \[
-\nabla_{u_T}Q(x_T,u_T) = C_{u_t,x_T}x_T+C_{u_T,u_T}u_T+c_{u_T}^T=0
+\nabla_{u_T}Q(x_T,u_T) = C_{u_T,x_T}x_T+C_{u_T,u_T}u_T+c_{u_T}^T=0
 \]
 By solving this equation, we have solved $u_T$, in terms of known constants and $x_T$:
 \[
-u_T = -C_{u_T,u_T}^{-1}(C_{u_t,x_T}x_T+c_{u_T})
+u_T = -C_{u_T,u_T}^{-1}(C_{u_T,x_T}x_T+c_{u_T})
 \]
 and to make notations more compact, let us denote $u_T$ as $u_T = K_Tx_T+k_T$, and $K_T = -C_{u_T,u_T}^{-1}C_{u_t,x_T}$, $k_T = -C_{u_T,u_T}^{-1}c_{u_T}$.
 
@@ -109,7 +112,7 @@ where we define $v_T$ and $V_T$ to make the notation more compact as follows:
     v_T&= c_{x_T} + C_{x_T,u_T}k_T+K_T^Tc_{u_T} + K_T^TC_{u_T,u_T}k_T
 \end{align*}
 
-Having solved the base case, we solve solve for other optimal control inputs backwards. Let us first proceed to solve for $u_{T-1}$ in terms of $x_{T-1}$. Now note that $u_{T-1}$ not only affects state $x_{T-1}$, but it also affects $x_T$ because of the system dynamics:
+Having solved the base case, we solve for other optimal control inputs backwards. Let us first proceed to solve for $u_{T-1}$ in terms of $x_{T-1}$. Now note that $u_{T-1}$ not only affects state $x_{T-1}$, but it also affects $x_T$ because of the system dynamics:
 \[
 f(x_{T-1}, u_{T-1}) = x_T = F_{T-1}\begin{bmatrix}x_{T-1}\\u_{T-1}\end{bmatrix} + f_{T-1}
 \]
@@ -127,7 +130,7 @@ Q(x_{T-1}, u_{T-1}) = \text{const} +\frac{1}{2} \begin{bmatrix}x_{T-1}\\u_{T-1}\
 \]
 where $Q_{T-1} = C_{T-1} + F^T_{T-1}V_TF_{T-1}$, and $q_{T-1} = c_{T-1} +  F^T_{T-1}V_Tf_{T-1} + F^T_{T-1}v_T$. To solve the optimization problem, we set the gradient to 0:
 \[
-\nabla_{u_{T-1}}Q(x_{T-1}, u_{T-1}) Q_{u_{T-1},x_{T-1}}x_{T-1} + Q_{u_{T-1},u_{T-1}}u_{T-1}+q_{u_{T-1}}^T=0
+\nabla_{u_{T-1}}Q(x_{T-1}, u_{T-1}) =Q_{u_{T-1},x_{T-1}}x_{T-1} + Q_{u_{T-1},u_{T-1}}u_{T-1}+q_{u_{T-1}}^T=0
 \]
 solving the equation, we have the following expression for $u_{T-1}$:
 \begin{align*}
@@ -138,7 +141,7 @@ solving the equation, we have the following expression for $u_{T-1}$:
 
 Applying the same technique backwards, we can solve for the states and inputs at each time step, as illustrated in Alg. \ref{alg:lqr}.
 \input{lqr.tex}
-In step 5 of Alg. \ref{alg:lqr}, Q-function represents the total cost from now until end if we take $u_t$ from state $x_t$, and in step 11, the V-function represents the total cost from now until end from state $x_t$, so $V(x_t) = \min_{u_t}Q_{x_t,u_t}$, which we call the cost-to-go function. 
+In step 5 of Alg. \ref{alg:lqr}, Q-function represents the total cost from now until end if we take $u_t$ from state $x_t$, and in step 11, the V-function represents the total cost from now until end from state $x_t$, so $V(x_t) = \min_{u_t}Q_{x_t,u_t}$, which we call the cost-to-go function. The above derivation is one of the many derivations of the Riccati Equation.
 
 What we have analyzed above is based on deterministic dynamics. What if the transition (dynamics) is stochastic? Specifically, consider the following setup:
 \begin{align*}
