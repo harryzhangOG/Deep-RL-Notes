@@ -4,7 +4,7 @@
 \label{alg:dynagen}
 \REQUIRE Some exploration policy for data collection $\pi_0$
 \STATE Collect some data, consisting of transitions $(s,a,s',r)$
-\STATE Learn model $\hat{p}(s'|s,a)$ (and optionally, $\hat{r}(s,a)$
+\STATE Learn model $\hat{p}(s'|s,a)$ (and optionally, $\hat{r}(s,a)$)
 \FOR{$K$ times}
 \STATE Sample $s\sim \mathcal{B}$ from buffer
 \STATE Choose action $a$ (from $\mathcal{B}$, from $\pi$, or random)
