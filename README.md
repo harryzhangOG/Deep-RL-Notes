@@ -13,3 +13,4 @@
 * Sep 23, 2020: Q learning chapter fix
 * Sep 26, 2020: More explanation and fix to the advanced PG chapter (specifically intuition behind TRPO).
 * Sep 28, 2020: Typo fixed and more explanation in Optimal Control. Typos were pointed out in Professor Levine's lecture.
+* Oct 6, 2020: Model-based RL chapter fixed. Added Distillation subsection.
