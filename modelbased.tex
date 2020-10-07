@@ -176,7 +176,7 @@ A sketch of iLQR is shown in Alg. \ref{alg:ilqr}. In essence, iLQR is an approxi
 \section{Model-based RL}
 In this section, we are going to cover a rather simpler case of model-based RL. Specifically, we are going to talk about a technique to learn a model of the system first, and then use the optimal control technique we covered last time to improve the model. Furthermore, we will learn to address uncertainty in the model such as model mismatch and imperfection.
 \subsection{Basics}
-Why do we learn the model? Because when the model is unknown, we can learn the model so that we know $f(s_t,a_t) = s_{t+1}$ or $p(s_{t+1}|s_t,a|t)$ in stochastic case, we could use the tools from optimal control to maximize our rewards. 
+Why do we learn the model? Because when the model is unknown, we can learn the model so that we know $f(s_t,a_t) = s_{t+1}$ or $p(s_{t+1}|s_t,a_t)$ in stochastic case, we could use the tools from optimal control to maximize our rewards. 
 
 Our first attempt is naive, we learn $f(s_t,a_t)$ from data, and then plan through it. We call this approach model-based RL version 0.5, or vanilla model-based RL, as shown in algorithm \ref{alg:mb05}.
 \input{mb05.tex}
@@ -267,7 +267,7 @@ However, the posterior distribution $p(s_t,s_{t+1}|o_{1:T},a_{1:T})$ is usually 
 \]
 such that the expectation is with respect to $s_t\sim q_\psi(s_t|o_t)$, $s_{t+1}\sim q_\psi(s_{t+1}|o_{t+1})$
 
-For now, let us focus on a simple case where $q(s_t|o_t)$ is deterministic, because the stochastic requires variational inference, which will be covered in-depth in a later chapter. In deterministic case, we are training a neural net $g_\psi(o_t) = s_t$ using a direc-delta function such that $q_\psi(s_t|o_t) = \delta(s_t = g_\psi(o_t))$. Then the expectation can be simplified as
+For now, let us focus on a simple case where $q(s_t|o_t)$ is deterministic, because the stochastic case requires variational inference, which will be covered in-depth in a later chapter. In deterministic case, we are training a neural net $g_\psi(o_t) = s_t$ using a direc-delta function such that $q_\psi(s_t|o_t) = \delta(s_t = g_\psi(o_t))$. Then the expectation can be simplified as
 \[
 \max_\phi \frac{1}{N}\sum_{i=1}^N\sum_{t=1}^T\log p_\phi(g_\psi(o_{t+1,i})|g_\psi(o_{t,i}),a_{t,i}) + \log p_\phi(o_{t,i}|g_\psi(o_{t,i}))
 \]
