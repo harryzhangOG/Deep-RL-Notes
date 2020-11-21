@@ -1,0 +1,6 @@
+\chapter{Offline RL}
+RL is fundamentally an “active” learning paradigm: the agent needs
+to collect its own dataset to learn meaningful policies. However, this might be unsafe or expensive in real world problems (e.g., autonomous driving). Therefore it would be more data-efficient to learn from a previously collected static dataset, which we call Offline (Batch) RL.
+
+\section{Offline RL Performance}
+In regular supervised learning problems such as classification, the algorithm can do as good as the dataset. But in offline RL, due to the ``stitching'' property, it can sometimes do better than the dataset. In fact, one can show that Q-learning recovers optimal policy from random data.

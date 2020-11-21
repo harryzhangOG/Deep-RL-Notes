@@ -5,9 +5,9 @@
 \WHILE{true}
     \STATE Take some action $a_i$ and observe $(s_i,a_i,s'_i,r_i)$ and add it to $\mathcal{B}$
     \STATE Sample mini-batch $\{s_j,a_j,s'_j,r_j\}$
-    \STATE Compute $y_j = r_j + \gamma \max_{a'_j}Q_{\phi'}(s'_j,a'_j)$ using target networks $Q_{\phi'}$ and $\mu_{\theta'}$
+    \STATE Compute $y_j = r_j + \gamma Q_{\phi'}(s'_j,a'_j)$ using target networks $Q_{\phi'}$ and $\mu_{\theta'}$
     \STATE $\phi \leftarrow \phi-\alpha\Sigma_j\frac{dQ_\phi}{d\phi}(s_j,a_j)(Q_\phi(s_j,a_j) - y_J)$
-    \STATE $\theta \leftarrow \theta + \beta\sum_j\frac{da}{d\theta}(s_j)\frac{dQ_\phi}{da}(s_j,a)$
+    \STATE $\theta \leftarrow \theta + \beta\sum_j\frac{d\mu}{d\theta}(s_j)\frac{dQ_\phi}{da}(s_j,a)$
     \STATE update $\phi'$ and $\theta'$
 \ENDWHILE
 \end{algorithmic}
