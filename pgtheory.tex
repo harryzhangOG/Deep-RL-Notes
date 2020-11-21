@@ -129,5 +129,5 @@ This matrix $F$ can be estimated using samples, and it gives us a convenient qua
 \[\theta' \leftarrow \theta  + \alpha F^{-1}\nabla_\theta J(\theta)\]
 , and the learning rate $\alpha$ can be chosen as 
 \[
-\alpha = \sqrt{\frac{2\epsilon}{\nabla_\theta J(\theta)^TF\nabla_\theta}}
+\alpha = \sqrt{\frac{2\epsilon}{\nabla_\theta J(\theta)^TF\nabla_\theta J(\theta)}}
 \]. Now our update rule is a lot more similar to gradient descent, except that in gradient descent, the l2 norm constrains the update step into a circle, while in our 2nd order approximation of KL-divergence, it constrains the update step into a ellipse. In practice if we want to solve this natural gradient descent problem with Fisher information matrix efficiently, there are some nice techniques to approximate the inverse of $F$, as suggested in the TRPO paper \cite{schulman2015trust}.
