@@ -15,3 +15,4 @@
 * Sep 28, 2020: Typo fixed and more explanation in Optimal Control. Typos were pointed out in Professor Levine's lecture.
 * Oct 6, 2021: Model-based RL chapter fixed. Added Distillation subsection.
 * Nov. 20, 2021: Fixed typos in DDPG, Online Actor Critic, and PG theory. Credit: Javier Leguina.
+* Apr. 2, 2023: Fixed typos in VAE and PG theory. Credit: wangcongrobot
