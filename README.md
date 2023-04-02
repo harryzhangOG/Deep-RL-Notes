@@ -1,6 +1,8 @@
 # Deep Reinforcement Learning Textbook
 ## A collection of comprehensive notes on Deep Reinforcement Learning, based on UC Berkeley's CS 285 (prev. CS 294-112) taught by Professor Sergey Levine.
 * Compile the latex source code into PDF locally.
+* Alternatively, you could download this repo as a zip file and upload the zip file to Overleaf and start editing online.
+* This repo is linked to my Overleaf editor so it is regularly updated.m
 * Please let me know if you have any questions or suggestions. Reach me via <harryhzhang@berkeley.edu>
 ## Update Log
 * Aug 26, 2020: Started adding Fall 2020 materials
