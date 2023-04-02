@@ -2,7 +2,7 @@
 ## A collection of comprehensive notes on Deep Reinforcement Learning, based on UC Berkeley's CS 285 (prev. CS 294-112) taught by Professor Sergey Levine.
 * Compile the latex source code into PDF locally.
 * Please let me know if you have any questions or suggestions. Reach me via <harryhzhang@berkeley.edu>
-## Update Log (Will stop updating until Oct. 31 because of ICRA 2021)
+## Update Log
 * Aug 26, 2020: Started adding Fall 2020 materials
 * Aug 28, 2020: Fixed typos in Intro. Credit: Warren Deng.
 * Aug 30, 2020: Added more explanation to the imitation learning chapter.
@@ -13,5 +13,5 @@
 * Sep 23, 2020: Q learning chapter fix
 * Sep 26, 2020: More explanation and fix to the advanced PG chapter (specifically intuition behind TRPO).
 * Sep 28, 2020: Typo fixed and more explanation in Optimal Control. Typos were pointed out in Professor Levine's lecture.
-* Oct 6, 2020: Model-based RL chapter fixed. Added Distillation subsection.
-* Nov. 20, 2020: Fixed typos in DDPG, Online Actor Critic, and PG theory. Credit: Javier Leguina.
+* Oct 6, 2021: Model-based RL chapter fixed. Added Distillation subsection.
+* Nov. 20, 2021: Fixed typos in DDPG, Online Actor Critic, and PG theory. Credit: Javier Leguina.
