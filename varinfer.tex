@@ -7,16 +7,16 @@ So what are latent variable models? Consider that we have a very complicated dis
 \[
 p(x) = \int p(x|z)p(z)dz
 \]
-$p(x|z)$ and $p(z)$ could be modeled by a conditional Gaussian and a Gaussian respectively. Since any function could be represented by a big enough neural network to an arbitrary precision, we can then use a neural net to represent $p(x|z)$ as $p(x|z) = \mathcal{N}(\mu_{nn}(z),\mu_{nn}(z))$. This sample distribution is a easy distribution with complicated parameters. Often in practice, we won't even learn $p(z)$, because we could just model it as a Gaussian distribution and transform it to any nonlinear distribution using the integral. The challenge of this approach, however, is to efficiently approximate the integral, which is quite hard.
+$p(x|z)$ and $p(z)$ could be modeled by a conditional Gaussian and a Gaussian respectively. Since any function could be represented by a big enough neural network to an arbitrary precision, we can then use a neural net to represent $p(x|z)$ as $p(x|z) = \mathcal{N}(\mu_{nn}(z),\sigma_{nn}(z))$. This sample distribution is an easy distribution with complicated parameters. Often in practice, we won't even learn $p(z)$, because we could just model it as a Gaussian distribution and transform it into any nonlinear distribution using the integral. The challenge of this approach, however, is to efficiently approximate the integral, which is quite hard.
 
 In RL, we mainly use latent variable models in the following scenarios. First, we could use conditional latent variable models for multi-modal policies, as we discussed in imitation learning. Specifically, we could train a network with Gaussian noise to infer the state from image-based observations. Another scenario is that we could use latent variable models for model-based RL. Essentially, we learn a conditional distribution $p(o_t|x_t)$ and prior $p(x_t)$.
 
 \section{Training Latent Variable Models}
 The model we are trying to fit is $p_\theta(x)$. We train the model using data $\mathcal{D} = \{x_1,x_2,\dots,x_N\}$. We use maximum likelihood fit: $\theta\leftarrow \argmaxA_\theta\frac{1}{N}\sum_i\log p_\theta(x_i)$. Using latent variables, we have $\theta\leftarrow \argmaxA_\theta\frac{1}{N}\sum_i\log \left(\int p_\theta(x_i|z)p(z)dz \right)$. And as we have shown above, the integral is completely intractable. 
 
-Alternatively, we could use the expected log-likelihhod:
+Alternatively, we could use the expected log-likelihood:
 \[
-theta\leftarrow \argmaxA_\theta\frac{1}{N}\sum_i\mathbb{E}_{z\sim p(z|x_i)}\log p_\theta(x_i)
+\theta\leftarrow \argmaxA_\theta\frac{1}{N}\sum_i\mathbb{E}_{z\sim p(z|x_i)}\log p_\theta(x_i)
 \]
 However, the conditional distribution $p(z|x_i)$ is unknown. Therefore, we can approximate this distribution with a simpler distribution $q_i(z) =\mathcal{N}(\mu_i,\sigma_i)$.
 
